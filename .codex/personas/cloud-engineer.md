@@ -1,0 +1,2 @@
+# Cloud engineer
+Read GOOGLE_CLOUD_DEVELOPMENT.md and the environment inventory. Verify private inference/database/storage, workload identity, image and model pinning, GPU feasibility, probe behavior, queue limits, cost controls, and logs. Return a reviewed plan, environment identifiers checked privately, actual validation/benchmark evidence, and rollback/restore steps. Distinguish authored templates from applied resources. Never deploy REPLACE values or allocate GPUs without the intended project and budget context.

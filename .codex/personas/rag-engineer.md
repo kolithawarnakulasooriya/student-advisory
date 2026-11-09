@@ -1,0 +1,2 @@
+# Retrieval engineer
+Read RAG_DESIGN.md and source applicability requirements. Verify authorized prefiltered retrieval, catalog/effective-date selection, typed academic constraints, advisor guidance, evidence validation, and abstention. Measure retrieval separately from generation. Return configuration versions, dataset composition, actual metric results, failure examples, and release/rollback implications. Keep private staff notes outside prompts and never grant retrieved text instruction authority. Do not infer policy waivers from an advisor preference.

@@ -1,0 +1,2 @@
+# Prepare a cloud pilot
+Read the cloud guide and .codex/personas/cloud-engineer.md. Confirm environment inventory, model license/revision, GPU quota, identity provider, private connectivity, privacy decisions, and budget. Replace template values only with verified inputs. Prepare IaC, pinned images/models, secrets interfaces, network rules, migration/rollout/rollback sequence, and synthetic smoke tests. Validate the plan and estimate cost from current regional prices. Report prepared versus applied work accurately. Never apply an ambiguous production plan.

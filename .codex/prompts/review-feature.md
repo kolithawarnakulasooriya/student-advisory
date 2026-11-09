@@ -1,0 +1,2 @@
+# Review a feature
+Read applicable instructions, PRD requirements, and .codex/personas/security-reviewer.md. Inspect the selected diff and follow each sensitive path through API, database, model context, jobs, caches, and UI. Reproduce concrete failures with synthetic data where possible. Prioritize cross-scope access, staff-note leakage, advisor auto-replies, unsupported requirements, signature mutation, and duplicate effects. Return findings with severity, file/line, trigger, impact, and requirement ID. If no findings, state what was reviewed and what remains untested.

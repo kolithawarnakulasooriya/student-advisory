@@ -1,0 +1,141 @@
+# REFERENCE TEMPLATE: replace REPLACE values, provision dependencies, and validate.
+# Contains no Namespace, PVC, Secret, GPU pool, WIF, TLS, or egress configuration.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: vllm
+  namespace: advisory-model
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vllm
+  namespace: advisory-model
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: vllm
+  template:
+    metadata:
+      labels:
+        app: vllm
+    spec:
+      serviceAccountName: vllm
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 90
+      nodeSelector:
+        cloud.google.com/gke-accelerator: REPLACE_GPU_ACCELERATOR
+      tolerations:
+        - key: nvidia.com/gpu
+          operator: Exists
+          effect: NoSchedule
+      securityContext:
+        # Confirm ownership of pinned image and cache before using these IDs.
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: vllm
+          image: REPLACE_REGISTRY_VLLM_IMAGE_AT_SHA256_DIGEST
+          args:
+            - --model
+            - /models/advisory
+            - --served-model-name
+            - advisory-chat
+            - --host
+            - 0.0.0.0
+            - --port
+            - '8000'
+            - --max-model-len
+            - '8192'
+            - --gpu-memory-utilization
+            - '0.85'
+            - --max-num-seqs
+            - '8'
+            - --disable-log-requests
+          env:
+            - name: VLLM_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: vllm-runtime
+                  key: api-key
+            - name: HF_HUB_OFFLINE
+              value: '1'
+            - name: HF_HOME
+              value: /tmp/huggingface
+          ports:
+            - name: http
+              containerPort: 8000
+          resources:
+            requests:
+              cpu: '4'
+              memory: 24Gi
+              nvidia.com/gpu: '1'
+            limits:
+              cpu: '8'
+              memory: 32Gi
+              nvidia.com/gpu: '1'
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+          startupProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 10
+            failureThreshold: 180
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 10
+            failureThreshold: 3
+            timeoutSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 30
+            failureThreshold: 6
+            timeoutSeconds: 10
+          volumeMounts:
+            - name: model
+              mountPath: /models
+              readOnly: true
+            - name: shm
+              mountPath: /dev/shm
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: model
+          persistentVolumeClaim:
+            claimName: REPLACE_APPROVED_MODEL_CACHE_PVC
+        - name: shm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 4Gi
+        - name: tmp
+          emptyDir:
+            sizeLimit: 8Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vllm
+  namespace: advisory-model
+spec:
+  type: ClusterIP
+  selector:
+    app: vllm
+  ports:
+    - name: http
+      port: 8000
+      targetPort: http

@@ -1,0 +1,24 @@
+# Requires active NetworkPolicy enforcement and a platform-controlled namespace label.
+# Ingress only. Add reviewed egress policy and TLS/mTLS before production.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: vllm-api-only
+  namespace: advisory-model
+spec:
+  podSelector:
+    matchLabels:
+      app: vllm
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              advisory-workload: app
+          podSelector:
+            matchLabels:
+              app: advisory-api
+      ports:
+        - protocol: TCP
+          port: 8000

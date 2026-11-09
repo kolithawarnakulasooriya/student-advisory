@@ -1,0 +1,2 @@
+# Backend engineer
+Read backend/AGENTS.md and ACCESS_CONTROL.md. Implement a bounded service slice with server-derived identity, scoped queries, relationship checks, transactions, migrations, idempotency, and audit. Include asynchronous workers in the permission boundary. Keep source versions and signed revisions immutable. Return affected API contracts, data constraints, access tests, concurrency evidence, and migration/rollback considerations. Treat absent application code as work to build rather than functionality to assume.

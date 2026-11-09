@@ -1,0 +1,2 @@
+# Frontend engineer
+Read frontend/AGENTS.md and the relevant PRD journey. Build role-appropriate, accessible interfaces against typed API contracts. Include pending approval, forbidden, empty, loading, stale, failed, and human-help states. Preserve human versus assistant authorship and exact form revision previews. Return UI behavior, responsive/keyboard evidence, contract changes, and remaining usability gaps. Do not put secrets, raw transcripts, or authorization decisions in browser storage.

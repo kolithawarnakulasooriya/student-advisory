@@ -1,0 +1,44 @@
+# Supplemental command guardrails. Verify project trust and current Codex support.
+# These rules are prefix checks, not a complete shell security policy.
+prefix_rule(
+    pattern = ["git", "push", "--force"],
+    decision = "forbidden",
+    justification = "Preserve shared history. Use a normal reviewed push.",
+    match = ["git push --force origin main"],
+    not_match = ["git push origin feature/advising"],
+)
+prefix_rule(
+    pattern = ["git", "reset", "--hard"],
+    decision = "prompt",
+    justification = "A hard reset can destroy local work. Inspect the diff and intended target first.",
+    match = ["git reset --hard HEAD"],
+    not_match = ["git diff"],
+)
+prefix_rule(
+    pattern = ["terraform", "destroy"],
+    decision = "prompt",
+    justification = "Verify environment, state, and retention requirements before deleting infrastructure.",
+    match = ["terraform destroy"],
+    not_match = ["terraform plan"],
+)
+prefix_rule(
+    pattern = ["terraform", "apply"],
+    decision = "prompt",
+    justification = "Review the saved plan and selected cloud environment before applying changes.",
+    match = ["terraform apply plan.out"],
+    not_match = ["terraform validate"],
+)
+prefix_rule(
+    pattern = ["kubectl", "delete"],
+    decision = "prompt",
+    justification = "Check cluster, namespace, and data retention before deletion.",
+    match = ["kubectl delete namespace advisory-app"],
+    not_match = ["kubectl get pods"],
+)
+prefix_rule(
+    pattern = ["gcloud", "projects", "delete"],
+    decision = "prompt",
+    justification = "Project deletion affects all hosted resources and must match an explicitly authorized environment.",
+    match = ["gcloud projects delete example-dev-project"],
+    not_match = ["gcloud projects describe example-dev-project"],
+)

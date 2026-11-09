@@ -1,0 +1,2 @@
+# Package validation tooling only; not backend application dependencies.
+PyYAML==6.0.3
