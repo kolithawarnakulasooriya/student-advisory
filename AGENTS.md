@@ -6,12 +6,20 @@
     - Read docs/RAG_DESIGN.md for RAG design architecture
     - Read docs/GOOGLE_CLOUD_DEVELOPMENT for cloud implementation and deployement information
     - Read docs/IMPLEMENTATION_BACKLOG.md for backlog of the feature developments
+    - Read docs/CODEX_GUIDE.ms for codex guidlines
     - Local development information
       - frontend/AGENTS.md 
       - backend/AGENTS.md
+    - Read docs/SOURCES.ms for references (Optional)
 
-## Work in bounded slices
-Select one backlog item, state the affected requirements, implement a complete vertical slice, and run relevant checks. Keep frontend and backend contracts consistent. Record unresolved institutional choices as assumptions. Do not invent course requirements, approvals, research evidence, benchmark results, or legal conclusions.
+## Work procedures
+1. Read the selected item from backlog (Ignore all Status = Completed Tasks)
+2. Chage the Status = Inprogress
+3. Run relevant checks, Keep frontend and backend contracts consistent.
+4. Record unresolved institutional choices as assumptions. 
+5. Implement the frature
+6. Once completed, Chage the Status = Completed
+**Constraint** Do not invent course requirements, approvals, research evidence, benchmark results, or legal conclusions.
 
 ## Mandatory invariants
 - Resolve authorization on the server for every object, query, export, event, download, and background task. Deny by default.
@@ -24,11 +32,14 @@ Select one backlog item, state the affected requirements, implement a complete v
 - No real student records in development, tests, prompts, screenshots, or logs. Use synthetic fixtures.
 - Keep credentials and cloud project identifiers out of committed source; use workload identities and Secret Manager in cloud.
 
-## Engineering defaults
-Frontend: Next.js and TypeScript. Backend: FastAPI, Pydantic, SQLAlchemy, Alembic, PostgreSQL/pgvector. Async jobs: Pub/Sub with transactional outbox. Inference: internal vLLM adapter; separate embedding adapter. Pin tested versions when bootstrapping; no application dependency lockfiles exist yet. Use modular services before creating additional microservices.
+## Engineering Desgin
+![docs/Architecture.png](docs/Architecture.png)
 
 ## Checks and delivery
-For each change provide requirements addressed, files changed, checks actually run, and remaining limitations. Add meaningful tests for authorization, retrieval boundaries, and form state changes. Run scripts/validate_package.py for package integrity; it is not an application test. The project .rules file is a command guardrail, not an authorization system or a full command allowlist.
+1. Provide requirements addressed, files changed, checks actually run, and remaining limitations. 
+2. Add meaningful tests for authorization, retrieval boundaries, and form state changes. 
+3. Run `scripts/validate_package.py` for package integrity
+4. The project `.rules` file is a command guardrail, not an authorization system or a full command allowlist.
 
 ## Personas and skills
 Read .codex/personas/README.md before selecting a specialist perspective. Persona Markdown does not register autonomous agents. Use the repo workflows under .agents/skills for focused tasks. Do not start parallel agents unless the user requests delegation. Keep docs and instructions synchronized with implementation.
