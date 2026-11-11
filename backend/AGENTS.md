@@ -16,4 +16,4 @@ Workers use idempotent events and reauthorize current scope; use an outbox for a
 
 Implement unit and database integration tests for access policies, retrieval filters, race conditions, stale signatures, outbox retries, and assignment changes. Use a real pgvector Postgres test container when checking SQL isolation. SQLite is not a substitute for RLS or concurrency tests.
 
-Planned commands after scaffolding: uv sync --frozen; uv run ruff check .; uv run mypy app; uv run pytest; uv run alembic upgrade head against a disposable test database. Create pinned project config and tests first. No backend app or dependency lockfile exists in this specification package.
+Release 0.1 commands: uv sync --frozen; uv run ruff check .; uv run mypy app; uv run pytest; uv run alembic upgrade head against a disposable test database. The app, migrations, tests, and uv.lock now exist. Follow ../README.md; run only on the disposable local database. Live identity and later advising services remain unimplemented.

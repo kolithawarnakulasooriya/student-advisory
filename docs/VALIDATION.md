@@ -1,17 +1,19 @@
 # Validation record
 
-Prepared November 5, 2026.
+Updated November 11, 2026 for Release 0.1. The original November 5 specification-package validation preceded application implementation; the current results below supersede its application-not-built limitation.
 
 ## Checks performed
 
-The package integrity checker passed 183 checks with the bundled Python environment and PyYAML 6.0.3. The validator also passed Python bytecode compilation. It checks required files, all five repository workflow frontmatters and names, local Markdown links, code fence balance, 24 seed scenario records, expected vLLM template objects, internal service type, GPU and secret interfaces, the combined namespace/pod selector, and all six command rules with their embedded positive and negative prefix examples.
+Release 0.1 local checks passed: 54 backend tests against real disposable PostgreSQL/pgvector, 8 frontend component tests, 14 Chromium end-to-end journeys, backend/frontend lint and type checks, locked dependency installs, fresh migrations and schema-drift checks, generated OpenAPI/client drift checks, and an optimized frontend build. The npm audit reports zero vulnerabilities. A scan found no generated local signing key in source or built browser assets. Git whitespace checks passed.
 
-The source documents were reviewed for consistency of role scope, secretary delegation, advisor no-auto-reply behavior, staff-note exclusion, published/catalog-specific evidence, immutable revisions, signature order, and explicit treatment of proposed versus observed behavior. GCP, vLLM, and Codex references were checked against official documentation; links are in SOURCES.md.
+The package validator passed 220 checks covering required assets, five workflow frontmatters, source Markdown links/fences, 24 synthetic behavioral seed cases, infrastructure template properties, and six rule examples. It excludes dependency/build/cache directories. This count is package integrity evidence, not application security or model evaluation evidence.
+
+Detailed commands, scenarios, migration effects, and limitations are recorded in the [Release 0.1 handoff](RELEASE_0_1.md). Setup is reproducible from README using the committed lockfiles and disposable Compose service.
 
 ## Limits
 
-No application has been built, so no frontend/backend unit tests, integration tests, end-to-end tests, grounding benchmark, accessibility assessment, or load test has passed yet. Seed scenarios are inputs for later tests, not evaluation results.
+No live institutional identity, real MFA/email, real student records, cloud provisioning, model inference, academic benchmark, signature workflow, load/recovery rehearsal, or institutional/legal review was performed. Future-resource authorization and worker access remain later tasks. GitHub Actions is defined but has not executed on GitHub in this session.
 
-Codex CLI, Docker, and kubectl were unavailable in the authoring environment. Command-rule examples were checked by the restricted package checker, not by native codex execpolicy. YAML was parsed and checked for selected properties, not submitted to a Kubernetes API server. No container was started, no GPU fit or health-probe behavior was verified, and no cloud resources were provisioned.
+Browser evidence covers Chromium keyboard/recovery flows and 360/768/1280 px layouts. Full screen-reader/WCAG assessment and other browser engines are outstanding. The backend test client and pinned ESLint major emit deprecation notices; the locked checks pass.
 
-The templates deliberately retain unresolved environment values. Database/RLS behavior, service TLS, network enforcement, model licensing/quality, and institutional signature/privacy/retention policies require implementation and environment-specific verification before a real student pilot.
+The Kubernetes templates retain unresolved environment placeholders. The package's native Codex rule engine and Kubernetes server-side validation were not exercised. Synthetic eval seeds are behavioral inputs, not academic ground truth or measured model results. No claim of deployment, GPU fit, legal sufficiency, production security certification, or production performance is made.

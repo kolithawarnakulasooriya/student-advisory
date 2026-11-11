@@ -2,15 +2,15 @@
 
 Version 1.0 • November 6, 2026 • 60 implementation tasks • All tasks initially open
 
-This file breaks the [implementation backlog](docs/IMPLEMENTATION_BACKLOG.md) into assignable work for coding agents. The [PRD](docs/PRD.md) controls product behavior. This is a work plan; the application and cloud resources are not implemented by this file.
+This file breaks the [implementation backlog](IMPLEMENTATION_BACKLOG.md) into assignable work for coding agents. The [PRD](PRD.md) controls product behavior. This is a work plan; the application and cloud resources are not implemented by this file.
 
 ## How agents use this file
 
-Read [AGENTS.md](AGENTS.md), the applicable frontend/backend instructions, and the linked design documents before editing. Select a task whose dependencies have completed acceptance evidence. The owner below is a recommended specialist perspective, not an automatically launched agent. One agent may complete several tasks; ownership does not grant cloud permissions or access to student records.
+Read [AGENTS.md](../AGENTS.md), the applicable frontend/backend instructions, and the linked design documents before editing. Select a task whose dependencies have completed acceptance evidence. The owner below is a recommended specialist perspective, not an automatically launched agent. One agent may complete several tasks; ownership does not grant cloud permissions or access to student records.
 
 Use the task ID in branches, PR descriptions, test reports, and handoffs. Before starting, record an assignee and mark the task in progress in its status line. When blocked, record the exact dependency or missing decision. Mark the checkbox complete only when deliverables and acceptance criteria are met and the required checks have actually run. Never infer completion from an earlier task's checkbox alone.
 
-Each task includes its owner, dependencies, PRD requirements, intended deliverables, work scope, acceptance criteria, and verification. Paths for application code are proposed destinations to create when scaffolding, not files that already exist. All implementation checkboxes below are deliberately unchecked.
+Each task includes its owner, dependencies, PRD requirements, intended deliverables, work scope, acceptance criteria, and verification. Paths for application code are proposed destinations to create when scaffolding, not files that already exist. Implementation checkboxes reflect recorded acceptance evidence; see the Release 0.1 handoff for foundation-only completion boundaries.
 
 ## Shared completion criteria
 
@@ -28,14 +28,14 @@ These shared checkboxes are a reusable checklist, not additional implementation 
 
 | Owner | Primary responsibilities | Reference |
 | --- | --- | --- |
-| Product architect | Decisions, requirement traceability, institutional pilot inputs | [Brief](.codex/personas/product-architect.md) |
-| Backend engineer | Identity, authorization, transactions, jobs, forms | [Brief](.codex/personas/backend-engineer.md) |
-| Frontend engineer | Role journeys, typed contracts, safe rendering, accessible UI | [Brief](.codex/personas/frontend-engineer.md) |
-| Retrieval engineer | Ingestion/indexing interfaces, retrieval, guidance, academic checks, evaluation | [Brief](.codex/personas/rag-engineer.md) |
-| Cloud engineer | IaC, private services, identities, GPU/vLLM, CI/CD, recovery | [Brief](.codex/personas/cloud-engineer.md) |
-| QA reviewer | Acceptance, isolation, concurrency, accessibility, end-to-end evidence | [Brief](.codex/personas/qa-reviewer.md) |
+| Product architect | Decisions, requirement traceability, institutional pilot inputs | [Brief](../.codex/personas/product-architect.md) |
+| Backend engineer | Identity, authorization, transactions, jobs, forms | [Brief](../.codex/personas/backend-engineer.md) |
+| Frontend engineer | Role journeys, typed contracts, safe rendering, accessible UI | [Brief](../.codex/personas/frontend-engineer.md) |
+| Retrieval engineer | Ingestion/indexing interfaces, retrieval, guidance, academic checks, evaluation | [Brief](../.codex/personas/rag-engineer.md) |
+| Cloud engineer | IaC, private services, identities, GPU/vLLM, CI/CD, recovery | [Brief](../.codex/personas/cloud-engineer.md) |
+| QA reviewer | Acceptance, isolation, concurrency, accessibility, end-to-end evidence | [Brief](../.codex/personas/qa-reviewer.md) |
 
-Use the [security brief](.codex/personas/security-reviewer.md) for sensitive feature reviews. Review responsibility is separate from task implementation ownership. Assign frontend/backend subtasks explicitly when a task crosses both; the listed owner integrates the result.
+Use the [security brief](../.codex/personas/security-reviewer.md) for sensitive feature reviews. Review responsibility is separate from task implementation ownership. Assign frontend/backend subtasks explicitly when a task crosses both; the listed owner integrates the result.
 
 ## Ordering and coordination
 
@@ -74,7 +74,9 @@ The production pilot is blocked until identity integration, privacy/retention de
 
 ### T001 Confirm role and scope decisions
 
-- [ ] Status: todo; assignee: unassigned; owner perspective: Product architect.
+- [x] Status: Completed; assignee: Codex; owner perspective: Product architect.
+
+Release 0.1 evidence: role/scope defaults and unresolved institutional choices recorded in [role decisions](decisions/roles.md).
 
 Dependencies: None. Requirements: PRD sections 2–4.
 
@@ -88,7 +90,9 @@ Verification: Compare the decision table against the PRD permission matrix with 
 
 ### T002 Define API and event contracts
 
-- [ ] Status: todo; assignee: unassigned; owner perspective: Backend engineer.
+- [ ] Status: Inprogress; assignee: Codex; owner perspective: Backend engineer.
+
+Release 0.1 subset completed: foundation OpenAPI, generated frontend types/client wrapper, structured errors and self/scope contracts. Event envelopes, workflow idempotency/ETags and later-resource schemas remain open; see [foundation contract](decisions/foundation-contract.md).
 
 Dependencies: T001. Requirements: PRD sections 12–13.
 
@@ -102,7 +106,9 @@ Verification: Validate contract schemas and review one allowed and one denied re
 
 ### T003 Define synthetic academic fixtures
 
-- [ ] Status: todo; assignee: unassigned; owner perspective: Retrieval engineer.
+- [ ] Status: Inprogress; assignee: Codex; owner perspective: Retrieval engineer.
+
+Release 0.1 subset completed: deterministic identity/org fixtures and denied-state accounts in backend/app/seed.py. Academic catalogs, private sources, contradictory rules and reviewed gold labels remain open; see [test data](decisions/test-data.md).
 
 Dependencies: T001. Requirements: ON-01–04, RG-01–07.
 
@@ -116,7 +122,9 @@ Verification: Check fixture isolation and manually review labeled course-rule ex
 
 ### T004 Record pilot policy dependencies
 
-- [ ] Status: todo; assignee: unassigned; owner perspective: Product architect.
+- [x] Status: Completed; assignee: Codex; owner perspective: Product architect.
+
+Release 0.1 evidence: required institutional decision owners and deployment blockers recorded in [pilot inputs](decisions/pilot-inputs.md); no real-data approvals claimed.
 
 Dependencies: T001. Requirements: PRD sections 2, 9, 14–16.
 
@@ -132,7 +140,9 @@ Verification: Review the register before provisioning or handling real student r
 
 ### T005 Scaffold the backend
 
-- [ ] Status: todo; assignee: unassigned; owner perspective: Backend engineer.
+- [x] Status: Completed; assignee: Codex; owner perspective: Backend engineer.
+
+Release 0.1 completed: backend scaffold, locked tooling, health/configuration/error checks; see [handoff](RELEASE_0_1.md).
 
 Dependencies: T002, T003. Requirements: PRD section 12.
 
@@ -146,7 +156,9 @@ Verification: Run actual lint/type checks and a health/configuration smoke test;
 
 ### T006 Scaffold the frontend
 
-- [ ] Status: todo; assignee: unassigned; owner perspective: Frontend engineer.
+- [x] Status: Completed; assignee: Codex; owner perspective: Frontend engineer.
+
+Release 0.1 completed: Next.js shell, generated client workflow and actual component/type/lint scripts; see [handoff](RELEASE_0_1.md).
 
 Dependencies: T002. Requirements: PRD section 11.
 
@@ -160,7 +172,9 @@ Verification: Run actual lint, typecheck, and component checks.
 
 ### T007 Add disposable database and local CI
 
-- [ ] Status: todo; assignee: unassigned; owner perspective: Backend engineer.
+- [x] Status: Completed; assignee: Codex; owner perspective: Backend engineer.
+
+Release 0.1 completed: digest-pinned pgvector Compose service, fresh migrations, guarded seed/reset and CI definition. Local checks passed; hosted GitHub Actions has not run. See [handoff](RELEASE_0_1.md).
 
 Dependencies: T005, T006. Requirements: PRD sections 12, 15.
 
@@ -176,7 +190,9 @@ Verification: Run migrations and smoke checks on a clean test database; verify s
 
 ### T008 Implement institution and organization model
 
-- [ ] Status: todo; assignee: unassigned; owner perspective: Backend engineer.
+- [x] Status: Completed; assignee: Codex; owner perspective: Backend engineer.
+
+Release 0.1 completed: scoped organization reads, hierarchy/timezone/database constraints and negative integration checks; see [handoff](RELEASE_0_1.md).
 
 Dependencies: T007, T001. Requirements: PRD section 12.
 
@@ -190,7 +206,9 @@ Verification: Run database constraints and organization hierarchy integration te
 
 ### T009 Implement verified identity and sessions
 
-- [ ] Status: todo; assignee: unassigned; owner perspective: Backend engineer.
+- [x] Status: Completed; assignee: Codex; owner perspective: Backend engineer.
+
+Release 0.1 completed for the authorized synthetic-local scope: immutable signed identity assertions, cookie sessions, CSRF, expiry, revocation, and MFA/recent-auth hooks. Live institutional identity integration remains a pilot dependency; see [handoff](RELEASE_0_1.md).
 
 Dependencies: T008. Requirements: ID-01, ID-05, PRD section 13.
 
@@ -204,7 +222,9 @@ Verification: Test token validation, CSRF, logout/revocation, staff MFA, and pro
 
 ### T010 Build registration and session UI
 
-- [ ] Status: todo; assignee: unassigned; owner perspective: Frontend engineer.
+- [x] Status: Completed; assignee: Codex; owner perspective: Frontend engineer.
+
+Release 0.1 completed: interactive synthetic registration/verification, account/MFA/expiry recovery, role landing, scope switch and sign-out; 14 browser journeys passed. Real membership requests/approval remain T015. See [handoff](RELEASE_0_1.md).
 
 Dependencies: T006, T009. Requirements: ID-01, PRD section 11.
 
@@ -220,7 +240,9 @@ Verification: Exercise sign-in, verify, expired session, logout, and browser-sto
 
 ### T011 Implement capability and relationship checks
 
-- [ ] Status: todo; assignee: unassigned; owner perspective: Backend engineer.
+- [ ] Status: Inprogress; assignee: Codex; owner perspective: Backend engineer.
+
+Release 0.1 subset completed: server-derived AuthContext, current explicit grants, /me foundation capabilities, centralized organization authorization and multi-role scope isolation. Full role ceilings/delegation, student relationships and later-resource action policies remain open.
 
 Dependencies: T009, T002. Requirements: PRD section 3, ID-06.
 
@@ -234,7 +256,9 @@ Verification: Run a data-driven positive/negative permission matrix including mu
 
 ### T012 Enforce scoped queries and row policies
 
-- [ ] Status: todo; assignee: unassigned; owner perspective: Backend engineer.
+- [ ] Status: Inprogress; assignee: Codex; owner perspective: Backend engineer.
+
+Release 0.1 subset completed: foundation scoped queries, separate non-owner identity/application roles, FORCE RLS on six foundation tables, missing-context denial and pooled connection reuse tests. Later-resource RLS and privileged worker policies remain open.
 
 Dependencies: T011. Requirements: PRD section 12, ACCESS_CONTROL.md.
 

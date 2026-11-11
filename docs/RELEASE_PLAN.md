@@ -1,10 +1,12 @@
 # Release Plan
 
-This release plan is based on the backlog in [docs/TASKS.md](docs/TASKS.md). It is organized so the product team can test working slices of the application at each stage instead of waiting for the full platform.
+This release plan is based on the backlog in [docs/TASKS.md](TASKS.md). It is organized so the product team can test working slices of the application at each stage instead of waiting for the full platform.
 
 ## Release 0.1 — Foundation and safe auth
 
 Goal: Get a working local app with identity, roles, and secure session boundaries.
+
+Status: Completed for the agreed synthetic-local scope on November 11, 2026. See [verification and limitations](RELEASE_0_1.md). Includes the foundation subset of T011/T012; their remaining authorization work stays in Release 0.2. Live institutional identity integration remains a pilot dependency.
 
 ### Backend
 - T005: FastAPI scaffold with health checks, config validation, and structured errors
