@@ -1,16 +1,14 @@
 # RAG Based Student Advisory System
 
-Product requirements document • Version 1.0 • November 5, 2026
+Product requirements document
 
-This document defines a student advising platform with a web frontend, a backend API, a document retrieval pipeline, human advisor participation, and an approval form workflow. It translates the requested roles and behavior into implementable requirements. The platform provides recommendations supported by approved institutional material and routes unresolved questions to assigned advisors. Academic decisions remain reviewable by authorized people.
-
-The development package is a specification and implementation guide. It does not contain a completed application or provisioned cloud resources. All architecture choices below are proposed defaults unless identified as an explicit user requirement.
+This document defines a student advising platform according to the architecture shown in `docs/Architecture.png`. It translates the requested roles and behavior into implementable requirements. The platform provides recommendations supported by approved institutional material and routes unresolved questions to assigned advisors. Academic decisions remain reviewable by authorized people. The development package is a specification and implementation guide. It does not contain a completed application or provisioned cloud resources. 
 
 ## 1 Product goals and scope
 
 Students should be able to understand requirements that apply to their program and catalog year, discuss possible plans, obtain help from a human advisor, and submit an agreed plan for signatures. Staff should be able to manage their assigned population and maintain the material that supports recommendations.
 
-The first release supports one institution with multiple colleges and departments. All institutional data still carries an institution identifier to prevent accidental mixing and to support future separation. A department is the normal operational scope; a college manager may receive explicit grants covering its departments. A college grant does not imply access to departments outside that college.
+This support with institutions with multiple colleges and departments. All institutional data still carries an institution identifier. A department is the normal operational scope; a college manager may receive explicit grants covering its departments. A college grant does not imply access to departments outside that college.
 
 The minimum release includes verified email registration and invitations, approval queues, scoped role grants, student onboarding, versioned knowledge publication, cited RAG chat, advisor guidance, escalation, notifications, and sequential signatures. It includes administrative audit records, revocation, backups, and evaluation gates.
 
