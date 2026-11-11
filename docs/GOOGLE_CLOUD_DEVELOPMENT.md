@@ -88,7 +88,7 @@ npm run typecheck
 npm run test
 ```
 
-The application and these commands are not included yet. Implement them in backlog B01. Use .env.example as a variable contract; keep .env untracked. Never enable mock auth or inference based only on an arbitrary request header. Production startup must reject AUTH_MODE=mock, INFERENCE_PROVIDER=mock, missing secrets, insecure cookies, and an external unrestricted vLLM URL.
+Release 0.1 now includes the foundation app and these commands; follow ../README.md for the current local setup. Live inference and cloud deployment remain unimplemented. Use .env.example as a variable contract; keep .env untracked. Never enable mock auth or inference based only on an arbitrary request header. Production startup must reject AUTH_MODE=mock, INFERENCE_PROVIDER=mock, missing secrets, insecure cookies, and an external unrestricted vLLM URL.
 
 For a real local GPU inference test, use a Linux NVIDIA host with a compatible driver and NVIDIA Container Toolkit. A laptop without a supported GPU should use the mock adapter or a private development inference endpoint. With approved weights preloaded into a local directory and the image pinned:
 

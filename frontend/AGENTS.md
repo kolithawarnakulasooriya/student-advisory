@@ -12,4 +12,14 @@ For forms, display the exact revision, course list, evidence, signer order, and 
 
 Use semantic controls, keyboard access, focus management, useful validation, and screen-reader status announcements. Check 360/768/1280 px layouts. Test critical journeys with synthetic accounts for each role and cross-scope denial cases. Prefer behavior tests over snapshots of implementation details.
 
-Planned commands after the frontend is scaffolded: npm ci; npm run lint; npm run typecheck; npm run test; npm run test:e2e. These scripts must be created with actual tooling and lockfile before being advertised as runnable. Do not claim these commands currently exist.
+Release 0.1 commands: npm ci; npm run lint; npm run typecheck; npm run test; npm run test:e2e. These scripts and package-lock.json now exist. Follow ../README.md. Run type generation/build before E2E, not concurrently; Next.js manages next-env.d.ts.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+## This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

@@ -19,3 +19,11 @@ coverage/
 local-data/
 model-cache/
 rendered-manifests/
+
+.ruff_cache/
+*.tsbuildinfo
+playwright-report/
+test-results/
+.DS_Store
+
+frontend/next-env.d.ts

@@ -4,13 +4,13 @@
     - Read docs/PRD.md for Product Requirements Information
     - Read docs/ACCESS_CONTROL.md for access control information
     - Read docs/RAG_DESIGN.md for RAG design architecture
-    - Read docs/GOOGLE_CLOUD_DEVELOPMENT for cloud implementation and deployement information
+    - Read docs/GOOGLE_CLOUD_DEVELOPMENT.md for cloud implementation and deployement information
     - Read docs/IMPLEMENTATION_BACKLOG.md for backlog of the feature developments
-    - Read docs/CODEX_GUIDE.ms for codex guidlines
+    - Read docs/CODEX_GUIDE.md for codex guidlines
     - Local development information
       - frontend/AGENTS.md 
       - backend/AGENTS.md
-    - Read docs/SOURCES.ms for references (Optional)
+    - Read docs/SOURCES.md for references (Optional)
 
 ## Work procedures
 1. Read the selected item from backlog (Ignore all Status = Completed Tasks)

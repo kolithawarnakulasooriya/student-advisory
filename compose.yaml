@@ -1,0 +1,19 @@
+services:
+  db:
+    image: pgvector/pgvector:pg17@sha256:7d0a41464797aeb9862dfdc0bbf1526b82cfd324cdd8036df19e3545f4a9ccb8
+    environment:
+      POSTGRES_DB: advisory_dev
+      POSTGRES_USER: advisory_migrator
+      POSTGRES_PASSWORD: local-migrations-only
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - advisory-dev:/var/lib/postgresql/data
+      - ./infra/local/init.sql:/docker-entrypoint-initdb.d/roles.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U advisory_migrator -d advisory_dev"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+volumes:
+  advisory-dev:
