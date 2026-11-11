@@ -44,9 +44,14 @@ for path in skills:
     check(bool(re.fullmatch(r'[a-z0-9-]{1,63}', meta['name'])), f'Invalid skill name: {path}')
     check(len(meta['description']) > 40 and len(parts[2].strip()) > 100, f'Thin workflow: {path}')
 
-for path in ROOT.rglob('*.md'):
-    if '.git' in path.parts:
-        continue
+# Walk source assets only; do not traverse dependency or build trees.
+import os
+ignored = {'.git', 'node_modules', '.venv', '.next', '.cache', '.mypy_cache', '.pytest_cache', '.ruff_cache', 'playwright-report', 'test-results'}
+markdown_paths = []
+for directory, directories, files in os.walk(ROOT):
+    directories[:] = [name for name in directories if name not in ignored]
+    markdown_paths.extend(Path(directory) / name for name in files if name.endswith('.md'))
+for path in markdown_paths:
     text = path.read_text()
     check(text.count('```') % 2 == 0, f'Unbalanced code fences: {path}')
     for target in re.findall(r'(?<!!)\[[^\]]+\]\(([^)]+)\)', text):

@@ -1,44 +1,96 @@
-# Student advisory implementation package
+# Student Advisory
 
-This package defines a RAG-based academic advising platform with separate frontend and backend components, scoped admin/manager/secretary/advisor/student access, cited student recommendations, advisor participation, human escalation, and sequential student/advisor/manager form signatures. Google Cloud GKE hosts the application and private vLLM GPU inference.
+Release 0.1 provides a local Next.js/FastAPI application with synthetic registration and verification, revocable cookie sessions, role landing pages, and server-enforced organization scope. PostgreSQL with pgvector is the source of truth. No real student records, live identity provider, advising answers, or cloud resources are used.
 
-It contains requirements, Codex development guidance, project workflows, and configuration templates. It does not contain the finished application, a provisioned cloud environment, or measured model performance.
+## Run locally
 
-## Start here
+Prerequisites: Docker with Compose, Node 22.19+ (see `.nvmrc`), Python 3.14, and uv 0.13.7. Start Docker before the database command. The database binds only to loopback.
 
-1. Read [the detailed PRD](docs/PRD.md) and its assumptions.
-2. Review [access control](docs/ACCESS_CONTROL.md), [RAG design](docs/RAG_DESIGN.md), and [API/event contracts](docs/API_AND_EVENTS.md).
-3. Follow [the implementation backlog](docs/IMPLEMENTATION_BACKLOG.md), beginning with B01.
-4. Use [the Codex guide](docs/CODEX_GUIDE.md), root [AGENTS.md](AGENTS.md), and the nested [frontend](frontend/AGENTS.md) and [backend](backend/AGENTS.md) instructions.
-5. Read [Google Cloud development](docs/GOOGLE_CLOUD_DEVELOPMENT.md) before adapting [the infrastructure templates](infra/README.md).
+From the repository root:
 
-## Package contents
+```bash
+python3 scripts/dev_env.py
+docker compose up -d --wait
+uv sync --project backend --frozen
+```
 
-| Location | Purpose |
-| --- | --- |
-| docs/PRD.md | Detailed product requirements and acceptance targets |
-| docs/ACCESS_CONTROL.md | Scope, relationship, revocation, and query enforcement |
-| docs/RAG_DESIGN.md | Ingestion, hybrid retrieval, guidance, citations, evaluations |
-| docs/API_AND_EVENTS.md | Payload examples and transactional event semantics |
-| docs/GOOGLE_CLOUD_DEVELOPMENT.md | Cloud setup, private vLLM, CI/CD, monitoring and recovery |
-| docs/IMPLEMENTATION_BACKLOG.md | 19 implementation slices with dependencies and exit evidence |
-| docs/SOURCES.md | Official source register and version-sensitive references |
-| AGENTS.md and frontend/backend instructions | Durable Codex project instructions |
-| .codex/rules/development.rules | Six supplemental Starlark command guardrails |
-| .codex/personas | Seven specialist briefs with explicit usage guidance |
-| .codex/prompts | Implementation, review, and cloud-pilot task templates |
-| .agents/skills | Five repo-scoped workflows for access, RAG, guidance, signatures, cloud |
-| infra/k8s | Private vLLM and ingress NetworkPolicy templates |
-| .env.example | Development variable contract with synthetic/mock defaults |
-| evals/scenarios.jsonl | 24 synthetic behavioral seed scenarios, not a benchmark result |
-| scripts/validate_package.py | Package consistency checker using Python and PyYAML |
+In the backend terminal:
 
-## Key decisions
+```bash
+cd backend
+uv run alembic upgrade head
+uv run python -m app.seed seed --confirm-database advisory_dev
+uv run uvicorn app.main:create_app --factory --host 127.0.0.1 --port 8000 --no-access-log
+```
 
-Secretary is a delegated department enrollment/assignment role. Advisor guidance is a typed human input that does not trigger an AI reply. Official requirements remain binding unless an authorized exception is recorded. Documents and retrieval settings update the RAG knowledge pipeline without training model weights. Initials/name capture is an authenticated electronic-signature workflow; institutional acceptance must be decided before real use.
+In a second terminal:
 
-All development data must be synthetic. Model/GPU choice, identity integration, signature policy, retention, and budget remain deployment inputs. The manifest templates contain deliberate REPLACE values and are not ready to apply.
+```bash
+cd frontend
+npm ci
+npm run dev
+```
 
-## Verify package integrity
+Open `http://localhost:3000` (use localhost, not 127.0.0.1, to match the configured Origin). The frontend proxies `/api` to FastAPI. Health endpoints are `/api/v1/health/live` and `/api/v1/health/ready`. Configuration creation never overwrites an existing `.env`, and generates a local random signing key without printing it. Never commit `.env` or real credentials. The committed database passwords are disposable local fixtures only.
 
-Install scripts/requirements-tooling.txt in an isolated Python environment, then run python3 scripts/validate_package.py. This validates the package's references, workflow frontmatter, eval schema, template properties, and embedded command-rule examples. It does not test an unbuilt app. See [validation evidence](docs/VALIDATION.md) for actual checks and limitations.
+Choose a predefined account in the UI. Students A/B belong to separate departments. Staff accounts require an explicit **Simulate staff MFA** action. The multi-role account advises in A and manages B. Pending, unverified, suspended, and revoked identities exercise denial/recovery states. All fixture addresses end in `@advisory.test`.
+
+New synthetic accounts use a `.test` email and display name. The local simulator displays an expiring verification challenge instead of sending email. Verification grants no membership; new accounts remain awaiting membership until approval workflows arrive in Release 0.2. No password or real MFA factor is collected. Production configurations fail closed because live identity integration is not implemented.
+
+## Checks
+
+Backend:
+
+```bash
+cd backend
+uv run ruff check .
+uv run mypy app
+uv run alembic check
+uv run pytest
+uv run python -m app.contracts --check
+```
+
+Database tests create/migrate/reset only the loopback `advisory_test` database, using the Compose migration identity. Runtime roles are separate non-owner identities without BYPASSRLS. Tests exercise real PostgreSQL policies and pool reuse; SQLite is not used.
+
+Frontend:
+
+```bash
+cd frontend
+npm ci
+npm run check-client
+npm run lint
+npm run typecheck
+npm run test
+npm run build
+npx playwright install chromium
+npm run test:e2e
+```
+
+E2E tests start/reuse the loopback API and frontend and use the seeded `advisory_dev` database. They add clearly synthetic registration fixtures. Do not edit application files during a browser run: development-server restarts interrupt journeys. Run build/type generation before E2E, not concurrently with it.
+
+Package integrity, from the repository root:
+
+```bash
+uv run --project backend python scripts/validate_package.py
+```
+
+After changing API schemas, run `uv run python -m app.contracts` from backend and `npm run generate-client` from frontend. Commit both generated snapshots. CI checks reproducibility and generated-contract drift. Next.js manages `next-env.d.ts`; typecheck runs `next typegen` before TypeScript.
+
+## Disposable data and shutdown
+
+```bash
+# From backend; refuses non-loopback/non-disposable database targets.
+uv run python -m app.seed reset --confirm-database advisory_dev
+```
+
+This resets only the known local synthetic tables and reseeds fixtures; it preserves migrations. Stop app terminals with Ctrl-C. Run `docker compose stop` from the root to stop PostgreSQL while retaining its disposable volume. No cloud resources or GPU workloads are started.
+
+## Requirements and delivery
+
+- [Release plan](docs/RELEASE_PLAN.md), [detailed tasks](docs/TASKS.md), and [implementation backlog](docs/IMPLEMENTATION_BACKLOG.md)
+- [Release 0.1 validation and handoff](docs/RELEASE_0_1.md)
+- [Product requirements](docs/PRD.md), [access control](docs/ACCESS_CONTROL.md), and [API/event contracts](docs/API_AND_EVENTS.md)
+- [Foundation contract](docs/decisions/foundation-contract.md), [role decisions](docs/decisions/roles.md), [test data](docs/decisions/test-data.md), and [pilot dependencies](docs/decisions/pilot-inputs.md)
+- [RAG design](docs/RAG_DESIGN.md), [cloud guide](docs/GOOGLE_CLOUD_DEVELOPMENT.md), and [source register](docs/SOURCES.md)
+
+Release 0.2 owns invitations, membership approvals, assignment/relationship authorization, administrative audit, and complete role workflows. Student records, retrieval, chat, forms, and signatures remain later-release work. Institutional identity, privacy, retention, signatures, and cloud/model decisions must be resolved before real data. Synthetic verification and tests do not establish institutional approval, academic correctness, legal sufficiency, or production performance.
