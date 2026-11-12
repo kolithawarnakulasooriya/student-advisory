@@ -1,5 +1,8 @@
 "use client";
 import Link from "next/link";
+import StaffWorkspace from "./staff-workspace";
+import OrganizationWorkspace from "./organization-workspace";
+import IntakeWorkspace from "./intake-workspace";
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { ApiError, get, Me, post } from "../lib/api";
 
@@ -20,17 +23,17 @@ const accounts = [
 ];
 const descriptions: Record<string, string> = {
   student:
-    "Your place to prepare for advising. Profile setup, cited guidance, and academic plans arrive in later releases.",
+    "Set up and review your academic profile and documents.",
   advisor:
-    "Your advising workspace. Assigned student rosters and guidance tools arrive in a later release.",
+    "Review assigned student profiles and manage their documents.",
   secretary:
-    "Your enrollment workspace. Requests, invitations, and assignment tools arrive in Release 0.2.",
+    "Review student requests, invitations, membership status, and assignments within your delegation.",
   manager:
-    "Your department workspace. Staff approvals and assignment tools arrive in Release 0.2.",
+    "Review department requests, manage staff and student memberships, and assign primary advisors.",
   platform_admin:
-    "Your delegated administration workspace. Scope and staff management arrive in Release 0.2.",
+    "Use your explicitly delegated staff, membership, record, and audit capabilities.",
   super_admin:
-    "Your administration workspace. Institution management and audited oversight arrive in a later release.",
+    "Review platform appointments and scoped staff operations. Global oversight requires an audited purpose.",
 };
 const label = (value: string) =>
   value.replaceAll("_", " ").replace(/\b\w/g, (c) => c.toUpperCase());
@@ -45,6 +48,7 @@ export default function Home() {
   const [email, setEmail] = useState("student-a@advisory.test");
   const [name, setName] = useState("");
   const [challenge, setChallenge] = useState("");
+  const [invitation, setInvitation] = useState("");
   const currentScope = useRef<string | null>(null);
   const generation = useRef(0);
   const title = useRef<HTMLHeadingElement>(null);
@@ -57,6 +61,9 @@ export default function Home() {
         currentScope.current = null;
         setMe(null);
         setChallenge("");
+        setRegistering(false);
+        setName("");
+        setLoading(false);
       }
     } else {
       setError(
@@ -73,7 +80,9 @@ export default function Home() {
         try {
           result = await get(
             "/api/v1/me",
-            scope ? `?scope_id=${encodeURIComponent(scope)}` : "",
+            scope
+              ? `?scope_id=${encodeURIComponent(scope)}&purpose=administration`
+              : "?purpose=administration",
           );
         } catch (reason) {
           if (!(scope && reason instanceof ApiError && reason.status === 404))
@@ -82,7 +91,7 @@ export default function Home() {
           // A scope may be revoked while this tab is open. Clear it before resolving current grants.
           setMe(null);
           currentScope.current = null;
-          result = await get("/api/v1/me");
+          result = await get("/api/v1/me", "?purpose=administration");
         }
         if (version !== generation.current) return;
         currentScope.current = result.active_scope ?? null;
@@ -92,6 +101,8 @@ export default function Home() {
         if (version !== generation.current) return;
         // Invalidate the previous view whenever current authorization cannot be verified.
         setMe(null);
+        if (reason instanceof ApiError && reason.status === 401)
+          setRegistering(false);
         if (!(
           initial &&
           reason instanceof ApiError &&
@@ -107,6 +118,17 @@ export default function Home() {
 
   useEffect(() => {
     const initial = setTimeout(() => {
+      const token = new URLSearchParams(window.location.hash.slice(1)).get(
+        "invitation",
+      );
+      if (token) {
+        setInvitation(token);
+        window.history.replaceState(
+          null,
+          "",
+          window.location.pathname + window.location.search,
+        );
+      }
       void refresh(undefined, true);
     }, 0);
     const requests = generation;
@@ -124,6 +146,11 @@ export default function Home() {
       requests.current++;
     };
   }, [refresh]);
+
+  const refreshWorkflows = useCallback(
+    () => refresh(currentScope.current ?? undefined),
+    [refresh],
+  );
 
   async function act(action: () => Promise<void>) {
     setBusy(true);
@@ -151,16 +178,21 @@ export default function Home() {
           name,
         });
         setChallenge(result.simulator_challenge);
+        setRegistering(false);
       } else {
         await post("/api/v1/auth/sign-in", { email });
       }
       await refresh();
     });
   }
-  const roles =
-    me?.active_grants
-      .filter((g) => g.org_unit_id === me.active_scope)
-      .map((g) => g.role) ?? [];
+  const roles = Array.from(
+    new Set([
+      ...(me?.active_grants
+        .filter((g) => g.org_unit_id === me.active_scope)
+        .map((g) => g.role) ?? []),
+      ...((me?.platform_grants?.length ?? 0) > 0 ? ["super_admin"] : []),
+    ]),
+  );
 
   return (
     <div className="shell">
@@ -171,7 +203,7 @@ export default function Home() {
           </span>
           Student Advisory
         </Link>
-        <span className="release">Foundation / 0.1</span>
+        <span className="release">Student onboarding / 0.3</span>
       </header>
       <div className="dev-banner">
         <span className="dot" aria-hidden="true" />
@@ -298,7 +330,7 @@ export default function Home() {
               </label>
               <p className="small">
                 Verification confirms a synthetic identity. Membership and roles
-                require a separate approval workflow in Release 0.2.
+                require separate approval by authorized staff.
               </p>
             </aside>
           </div>
@@ -408,8 +440,18 @@ export default function Home() {
                   {me.membership_state === "pending"
                     ? "Your synthetic membership is pending approval."
                     : "You do not have an active membership."}{" "}
-                  Membership requests and approval tools arrive in Release 0.2.
+                  Request membership below. Authorized staff will review your
+                  department and advisor assignment.
                 </p>
+                {me.memberships.length > 0 && (
+                  <ul aria-label="Your membership states">
+                    {me.memberships.map((g) => (
+                      <li key={g.id}>
+                        {g.role.replaceAll("_", " ")}: {g.status}
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </section>
             ) : (
               <>
@@ -459,8 +501,8 @@ export default function Home() {
                       <li>Revocable browser session</li>
                     </ul>
                     <p className="small">
-                      Only foundation capabilities are available in this
-                      release.
+                      Actions below use current server-validated permissions and
+                      assignments.
                     </p>
                   </section>
                 </div>
@@ -468,8 +510,49 @@ export default function Home() {
             )}
           </>
         )}
+        {invitation && !me && (
+          <p className="notice" role="status">
+            An invitation is ready. Sign in or register with the invited email,
+            then verify and accept it.
+          </p>
+        )}
+        {me &&
+          me.verified &&
+          !me.mfa_required &&
+          me.administration_capabilities?.includes("organization.manage") && (
+            <nav
+              className="administration-nav"
+              aria-label="Administration navigation"
+            >
+              <a href="#organization-administration">
+                College and department administration
+              </a>
+            </nav>
+          )}
+        {me && me.verified && !me.mfa_required && (
+          <StaffWorkspace
+            key={`${me.user_id}:${me.active_scope}:${me.grant_epoch}:${JSON.stringify(me.student_memberships ?? [])}`}
+            me={me}
+            invitation={invitation}
+            clearInvitation={() => setInvitation("")}
+            refreshMe={refreshWorkflows}
+          />
+        )}
+        {me &&
+          me.verified &&
+          !me.mfa_required &&
+          me.administration_capabilities?.includes("organization.manage") && (
+            <OrganizationWorkspace
+              key={`org:${me.user_id}:${me.grant_epoch}:${JSON.stringify(me.organization_epochs)}`}
+              me={me}
+              refreshMe={refreshWorkflows}
+            />
+          )}
+        {me && me.verified && !me.mfa_required && (
+          <IntakeWorkspace key={`intake:${me.user_id}:${me.active_scope}:${me.grant_epoch}:${JSON.stringify(me.student_memberships)}`} me={me} refreshMe={refreshWorkflows} />
+        )}
         <footer>
-          Student Advisory <span>Local foundation · Release 0.1</span>
+          Student Advisory <span>Student onboarding and documents · Release 0.3</span>
         </footer>
       </main>
     </div>

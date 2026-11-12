@@ -10,7 +10,16 @@ from sqlalchemy import create_engine, select, text
 from sqlalchemy.engine import make_url
 from sqlalchemy.orm import Session
 
-from app.models import Institution, OrgUnit, RoleGrant, User
+from app.models import (
+    AdvisorAssignment,
+    EnrollmentOption,
+    Institution,
+    MembershipRequest,
+    OrgUnit,
+    RoleGrant,
+    StudentMembership,
+    User,
+)
 
 NAMESPACE = UUID("20000000-0000-4000-8000-000000000001")
 
@@ -20,6 +29,9 @@ def fixture_id(name: str) -> UUID:
 
 
 ACCOUNTS = {
+    "advisor-a2": ("advisor", "department-a", "active", True, "active"),
+    "unassigned-advisor": ("advisor", "department-a", "active", True, "active"),
+    "secretary-no-delegation": ("secretary", "department-a", "active", True, "active"),
     "student-a": ("student", "department-a", "active", True, "active"),
     "student-b": ("student", "department-b", "active", True, "active"),
     "advisor-a": ("advisor", "department-a", "active", True, "active"),
@@ -103,6 +115,93 @@ def seed(db: Session) -> None:
             )
     db.flush()
 
+    from app.intake_models import OnboardingConfig, OnboardingSchema
+    from app.intake_schemas import synthetic_definition
+
+    for code in ("department-a", "department-b"):
+        oid = fixture_id(code)
+        if db.get(OnboardingConfig, oid) is None:
+            schema = OnboardingSchema(
+                id=fixture_id(f"onboarding:{code}:1"),
+                institution_id=fixture_id("synthetic"),
+                org_unit_id=oid,
+                version=1,
+                definition=synthetic_definition().model_dump(mode="json"),
+                author_id=fixture_id("manager"),
+            )
+            db.add(schema)
+            db.flush()
+            db.add(OnboardingConfig(id=oid, version=1, active_schema_id=schema.id))
+    db.flush()
+
+    # Opt-in delegation is always an operator/admin action, never a fixture role-label promotion.
+    for name in ("department-a", "department-b"):
+        if db.get(EnrollmentOption, fixture_id(name)) is None:
+            db.add(
+                EnrollmentOption(
+                    id=fixture_id(name),
+                    institution_id=fixture_id("synthetic"),
+                    label="Synthetic " + name.replace("-", " ").title(),
+                    enabled=True,
+                )
+            )
+    secretary = db.get(RoleGrant, fixture_id("grant:secretary:department-a"))
+    if secretary and not secretary.capabilities and secretary.version == 1:
+        secretary.version += 1
+        secretary.capabilities = [
+            "student.invite",
+            "student.approve",
+            "student.manage",
+            "assignment.manage",
+        ]
+    for grant in list(db.scalars(select(RoleGrant).where(RoleGrant.role == "student"))):
+        member = db.scalar(select(StudentMembership).where(StudentMembership.grant_id == grant.id))
+        if member is None:
+            member = StudentMembership(
+                id=grant.id,
+                grant_id=grant.id,
+                user_id=grant.user_id,
+                institution_id=grant.institution_id,
+                org_unit_id=grant.org_unit_id,
+            )
+            db.add(member)
+            db.flush()
+        if grant.status == "active" and not db.scalar(
+            select(AdvisorAssignment.id).where(
+                AdvisorAssignment.student_membership_id == member.id,
+            )
+        ):
+            advisor = (
+                "advisor-a" if grant.org_unit_id == fixture_id("department-a") else "advisor-b"
+            )
+            db.add(
+                AdvisorAssignment(
+                    student_membership_id=member.id,
+                    advisor_grant_id=fixture_id(
+                        f"grant:{advisor}:department-a"
+                        if advisor == "advisor-a"
+                        else "grant:advisor-b:department-b"
+                    ),
+                    actor_id=fixture_id("manager"),
+                    reason="Explicit synthetic fixture setup; not an institutional approval",
+                )
+            )
+        if grant.status == "pending" and not db.scalar(
+            select(MembershipRequest.id).where(
+                MembershipRequest.user_id == grant.user_id, MembershipRequest.status == "pending"
+            )
+        ):
+            db.add(
+                MembershipRequest(
+                    user_id=grant.user_id,
+                    institution_id=grant.institution_id,
+                    org_unit_id=grant.org_unit_id,
+                    requested_role="student",
+                    justification="Synthetic pending fixture",
+                )
+            )
+    db.flush()
+
 
 def disposable_url(url: str, app_env: str, confirmation: str) -> str:
     parsed = make_url(url)
@@ -136,10 +235,13 @@ def main() -> None:
             # Only the known fixture schema; retain migrations and vector extension.
             db.execute(
                 text(
-                    "TRUNCATE verifications, sessions, role_grants, users, "
+                    "TRUNCATE operational_reasons, audit_events, "
+                    "idempotency_records, outbox_events, "
+                    "verifications, sessions, role_grants, users, "
                     "org_units, institutions CASCADE"
                 )
             )
+            db.execute(text("UPDATE platform_control SET bootstrap_completed=false WHERE id=1"))
         seed(db)
         count = len(list(db.scalars(select(User.id))))
     print(f"Synthetic seed ready: {count} identities; no real records.")

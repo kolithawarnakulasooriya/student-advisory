@@ -5,6 +5,9 @@ if (!/^http:\/\/(127\.0\.0\.1|localhost):\d+$/.test(api)) {
 }
 const config: NextConfig = {
   poweredByHeader: false,
+  distDir: process.env.ADVISORY_NEXT_DIST_DIR ?? ".next",
+  logging: false,
+  devIndicators: false,
   async rewrites() {
     return [{ source: "/api/:path*", destination: `${api}/api/:path*` }];
   },

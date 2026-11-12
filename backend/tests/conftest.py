@@ -45,10 +45,13 @@ def seeded(owner: Engine) -> Engine:
     with Session(owner) as db, db.begin():
         db.execute(
             text(
-                "TRUNCATE verifications, sessions, role_grants, users, org_units, "
+                "TRUNCATE operational_reasons, audit_events, idempotency_records, "
+                "outbox_events, verifications, "
+                "sessions, role_grants, users, org_units, "
                 "institutions CASCADE"
             )
         )
+        db.execute(text("UPDATE platform_control SET bootstrap_completed=false WHERE id=1"))
         seed(db)
     return owner
 

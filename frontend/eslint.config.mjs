@@ -6,6 +6,7 @@ export default defineConfig([
   ...ts,
   globalIgnores([
     ".next/**",
+    ".next-e2e-*/**",
     "lib/api-types.ts",
     "playwright-report/**",
     "test-results/**",

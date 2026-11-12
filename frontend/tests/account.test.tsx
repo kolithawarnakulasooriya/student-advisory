@@ -8,6 +8,7 @@ vi.mock("../lib/api", async (original) => ({
   get: vi.fn(),
   post: vi.fn(),
 }));
+vi.mock("../app/staff-workspace", () => ({ default: () => null }));
 const getMock = vi.mocked(get);
 const postMock = vi.mocked(post);
 function actor(overrides: Partial<Me> = {}): Me {
@@ -21,6 +22,11 @@ function actor(overrides: Partial<Me> = {}): Me {
     mfa_required: false,
     recent_auth: true,
     grant_epoch: 1,
+    administration_capabilities: [],
+    organization_grants: [],
+    organization_epochs: {},
+    platform_grants: [],
+    student_memberships: [],
     active_scope: "dept-a",
     active_grants: [
       {
@@ -168,4 +174,17 @@ describe("account journeys", () => {
       screen.getByRole("button", { name: "Retry connection" }),
     ).toBeVisible();
   });
+});
+
+it("recovers an initially expired session without leaving the loading screen", async () => {
+  getMock.mockRejectedValue(
+    new ApiError(
+      401,
+      "SESSION_EXPIRED",
+      "Your session expired. Sign in again.",
+    ),
+  );
+  render(<Home />);
+  expect(await screen.findByRole("button", { name: "Sign in" })).toBeVisible();
+  expect(screen.queryByText("Checking your session…")).toBeNull();
 });
