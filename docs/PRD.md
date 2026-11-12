@@ -38,6 +38,7 @@ Authorization combines role, scope, relationship, resource state, and action. A 
 | Capability | Super admin | Platform admin | Manager | Secretary | Advisor | Student |
 | --- | --- | --- | --- | --- | --- | --- |
 | Configure platform and appoint super admins | Global | No | No | No | No | No |
+| Manage colleges/departments and enrollment availability | Existing institutions | Explicit institution/college organization-management grant; metadata only | No | No | No | No |
 | Manage department managers | Global | Only explicit delegated scope | No | No | No | No |
 | Approve and revoke advisors | Global | Delegated scope | Own scope | No | No | No |
 | Approve students and assign advisors | Global | Delegated scope | Own scope | Delegated scope | No | No |
@@ -54,6 +55,8 @@ Authorization combines role, scope, relationship, resource state, and action. A 
 Global visibility is a requested super admin capability, but record access must be logged with actor, reason, subject, time, and action. Default dashboards expose counts and queues rather than transcripts. Staff access must serve the institution's approved educational purpose. A system administrator cannot impersonate a student signature. High privilege alone does not satisfy a form signing relationship.
 
 Managers may appoint advisors only within their own scope and only up to the advisor role. Secretaries cannot appoint managers or advisors, publish policy, inspect transcripts, or sign as another person. Student removal means membership suspension or revocation, preserving records according to retention policy rather than immediate destructive deletion.
+
+Organization administration (T061) uses explicit institution/college grants independently of department membership. Only super admins delegate it; it never includes manager appointment or student-record authority. New departments start closed to requests; archive/restore preserves history and rejects active memberships/descendants. See [organization contract](decisions/organization-contract.md) for lifecycle defaults.
 
 ## 4 Identity and enrollment requirements
 

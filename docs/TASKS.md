@@ -1,6 +1,6 @@
 # Student advisory agent task list
 
-Version 1.0 • November 6, 2026 • 60 implementation tasks • All tasks initially open
+Version 1.1 • November 11, 2026 • 61 implementation tasks • Statuses reflect recorded acceptance evidence
 
 This file breaks the [implementation backlog](IMPLEMENTATION_BACKLOG.md) into assignable work for coding agents. The [PRD](PRD.md) controls product behavior. This is a work plan; the application and cloud resources are not implemented by this file.
 
@@ -39,7 +39,7 @@ Use the [security brief](../.codex/personas/security-reviewer.md) for sensitive 
 
 ## Ordering and coordination
 
-Follow dependency IDs rather than heading order. Within B01, frontend and backend scaffolding can be separate work after contracts exist. After authorization, onboarding and document ingestion can progress separately. Cloud planning may proceed after scaffolding and required environment inputs; final cloud deployment requires the application/model interfaces. B16 dashboard and accessibility work completes earlier UI slices rather than postponing all frontend work.
+Follow dependency IDs rather than heading order. Within B01, frontend and backend scaffolding can be separate work after contracts exist. Complete T061 college/department administration after Release 0.2 and before Release 0.3 onboarding. After authorization, onboarding and document ingestion can progress separately. Cloud planning may proceed after scaffolding and required environment inputs; final cloud deployment requires the application/model interfaces. B16 dashboard and accessibility work completes earlier UI slices rather than postponing all frontend work.
 
 If multiple agents are explicitly assigned, use isolated branches/worktrees and reserve shared migrations, OpenAPI, generated-client changes, and IaC state for one integration owner at a time. Do not edit the same migration or run competing cloud applies. Merge prerequisite interfaces before dependent implementation. No agents are launched by this document.
 
@@ -51,7 +51,7 @@ The production pilot is blocked until identity integration, privacy/retention de
 | --- | --- | --- |
 | Phase 0 Decisions and contracts | T001–T004 | Confirm role and scope decisions through record pilot policy dependencies |
 | B01 Repository and local development | T005–T007 | Scaffold the backend through add disposable database and local ci |
-| B02 Identity and organization | T008–T010 | Implement institution and organization model through build registration and session ui |
+| B02 Identity and organization | T008–T010, T061 | Organization model, registration/session UI, and administrative college/department management |
 | B03 Authorization and audit | T011–T013 | Implement capability and relationship checks through implement administrative audit and oversight history |
 | B04 Invitations approvals and account lifecycle | T014–T016 | Implement email invitations through implement suspension and delegated staff management |
 | B05 Advisor assignments and revocation | T017–T018 | Implement assignment and reassignment through cancel stale jobs caches and streams |
@@ -92,7 +92,9 @@ Verification: Compare the decision table against the PRD permission matrix with 
 
 - [ ] Status: Inprogress; assignee: Codex; owner perspective: Backend engineer.
 
-Release 0.1 subset completed: foundation OpenAPI, generated frontend types/client wrapper, structured errors and self/scope contracts. Event envelopes, workflow idempotency/ETags and later-resource schemas remain open; see [foundation contract](decisions/foundation-contract.md).
+Release 0.1 subset completed: foundation OpenAPI, generated frontend types/client wrapper, structured errors and self/scope contracts. Workflow OpenAPI, bounded signed cursors, idempotency/ETags and invitation outbox metadata completed in Release 0.2; full event publication and later-resource schemas remain open; see [foundation contract](decisions/foundation-contract.md).
+
+Postman subset completed: all 51 current API operations (including T061) with generated collection/local environment, session/CSRF scripting, idempotency/revision examples and CI drift checks. Official-schema/body validation passed; Newman smoke passed 25 assertions and registration/verification/approval with idempotent retry passed 34 assertions. See [Postman instructions](../postman/README.md). Full later-resource/event contracts remain open.
 
 Dependencies: T001. Requirements: PRD sections 12–13.
 
@@ -108,7 +110,7 @@ Verification: Validate contract schemas and review one allowed and one denied re
 
 - [ ] Status: Inprogress; assignee: Codex; owner perspective: Retrieval engineer.
 
-Release 0.1 subset completed: deterministic identity/org fixtures and denied-state accounts in backend/app/seed.py. Academic catalogs, private sources, contradictory rules and reviewed gold labels remain open; see [test data](decisions/test-data.md).
+Release 0.1 subset completed: deterministic identity/org fixtures and denied-state accounts in backend/app/seed.py. Release 0.2 adds advisor/delegation/enrollment fixtures and finite-capacity/concurrency cases. Academic catalogs, private sources, contradictory rules and reviewed gold labels remain open; see [test data](decisions/test-data.md).
 
 Dependencies: T001. Requirements: ON-01–04, RG-01–07.
 
@@ -204,6 +206,31 @@ Acceptance: Invalid cross-institution parents and organization cycles are reject
 
 Verification: Run database constraints and organization hierarchy integration tests.
 
+### T061 Implement college and department administration
+
+- [x] Status: Completed; assignee: Codex; owner perspective: Backend engineer.
+
+Delivered after Release 0.2 and before Release 0.3 student onboarding. This task extends T008's completed model/read interfaces; department creation previously required synthetic operator seeds. Frontend and authorization verification are required parts of this task, not deferred dashboard placeholders.
+
+Completion evidence: additive migrations 0010–0011, explicit metadata grants, administrative API/UI, safe enrollment/archive and lifecycle integration. Fresh PostgreSQL suite: 107 passed; frontend components: 19 passed; E2E: 29 passed; generated contracts/Postman, build, lint/types and package checks passed. See [T061 handoff](T061_HANDOFF.md).
+
+Dependencies: T008, T011, T012, T013, T016. Requirements: PRD sections 2–3, 11–13; explicit organization-administration addition requested by the user. Record the new capability policy in the PRD and access-control decisions before implementation.
+
+Deliverables: authorized organization mutation APIs and forced-RLS write policies; administrative college/department forms and enrollment controls; audit events; updated OpenAPI, generated frontend/Postman contracts, synthetic fixtures, and setup instructions.
+
+Work:
+
+- Create colleges and departments within an existing institution; edit names, institution-unique codes, and valid timezones while preserving immutable identifiers and hierarchy constraints.
+- Permit platform super admins to administer organizations. Allow platform admins only through a separately defined, explicit organization-management capability bounded to authorized institutions and parent units. Managers, secretaries, advisors, and students cannot create departments. Creating an organization never implicitly grants membership, records access, or wider administrative authority.
+- Configure whether an active department is open for membership requests, using the existing verified-only membership-options boundary. Keep department-manager appointment as a separate authorized action under existing appointment ceilings; organization-management delegation alone cannot appoint managers.
+- Provide archive/restore controls that retain memberships, assignments and history. Reject removal or archival of units with active memberships or active descendants. Prevent new enrollment/invitations under archived units and recheck outstanding requests/invitations on activation. No destructive organization deletion, institution transfer, or populated-unit reparenting is included without a separate approved data plan.
+- Require staff MFA, recent authentication, CSRF, idempotency keys and revision checks on administrative mutations. Record successful changes atomically and denied attempts separately; invalidate affected organization selectors and scope-bound UI state.
+- Record unresolved institutional naming, ownership and archival rules as assumptions. New institutions, department transfers and automatic expansion of existing college grants remain outside this task.
+
+Acceptance: An authorized super admin can create a college/department, configure request availability, and separately appoint its manager through the UI. Explicitly delegated admins can act only within their granted organization boundaries. Wrong-institution parents, invalid timezones, duplicate codes, cycles, unauthorized writes and stale updates are rejected. Creating a new department does not expand any existing user's effective scope. Archival cannot destroy or orphan active memberships or history.
+
+Verification: Use synthetic PostgreSQL integration tests for the role/delegation matrix, forced RLS and pooled connections, hierarchy constraints, concurrent duplicate creation, revision conflicts, archive/restore safeguards, and request/invitation reauthorization. Exercise admin create → enrollment configuration → authorized manager appointment and wrong-scope denial in browser tests; verify keyboard operation and 360/768/1280 px layouts. Run relevant backend/frontend checks, contract/Postman drift checks, and `python3 scripts/validate_package.py`; record actual results before marking complete.
+
 ### T009 Implement verified identity and sessions
 
 - [x] Status: Completed; assignee: Codex; owner perspective: Backend engineer.
@@ -240,9 +267,11 @@ Verification: Exercise sign-in, verify, expired session, logout, and browser-sto
 
 ### T011 Implement capability and relationship checks
 
-- [ ] Status: Inprogress; assignee: Codex; owner perspective: Backend engineer.
+- [x] Status: Completed; assignee: Codex; owner perspective: Backend engineer.
 
-Release 0.1 subset completed: server-derived AuthContext, current explicit grants, /me foundation capabilities, centralized organization authorization and multi-role scope isolation. Full role ceilings/delegation, student relationships and later-resource action policies remain open.
+Release 0.1 subset completed: server-derived AuthContext, current explicit grants, /me foundation capabilities, centralized organization authorization and multi-role scope isolation. Role ceilings/delegation and student relationships are completed for current resources in Release 0.2 below; future-resource policies remain with their features.
+
+Release 0.2 completed for current resources: explicit capability/appointment ceilings, separate platform authority, scoped student relationships, verified-only enrollment discovery, MFA/recent-auth checks, and delegation denial matrix. Later resources must extend these policies when introduced. See [Release 0.2 evidence](RELEASE_0_2.md).
 
 Dependencies: T009, T002. Requirements: PRD section 3, ID-06.
 
@@ -256,9 +285,11 @@ Verification: Run a data-driven positive/negative permission matrix including mu
 
 ### T012 Enforce scoped queries and row policies
 
-- [ ] Status: Inprogress; assignee: Codex; owner perspective: Backend engineer.
+- [x] Status: Completed; assignee: Codex; owner perspective: Backend engineer.
 
-Release 0.1 subset completed: foundation scoped queries, separate non-owner identity/application roles, FORCE RLS on six foundation tables, missing-context denial and pooled connection reuse tests. Later-resource RLS and privileged worker policies remain open.
+Release 0.1 subset completed: foundation scoped queries, separate non-owner identity/application roles, FORCE RLS on six foundation tables, missing-context denial and pooled connection reuse tests. Release 0.2 extends current-resource RLS and restricted invitation-worker policies below; future-resource policies remain with their features.
+
+Release 0.2 completed for current tables: additive migrations 0004–0009, forced RLS, scoped writes and counts, short auth transactions, non-owner runtime roles, restricted SMTP consumer, missing-context and pooled-reuse checks. Future-resource policies remain with their features. See [Release 0.2 evidence](RELEASE_0_2.md).
 
 Dependencies: T011. Requirements: PRD section 12, ACCESS_CONTROL.md.
 
@@ -272,7 +303,9 @@ Verification: Run real PostgreSQL tests for wrong-department access and pooled c
 
 ### T013 Implement administrative audit and oversight history
 
-- [ ] Status: todo; assignee: unassigned; owner perspective: Backend engineer.
+- [x] Status: Completed; assignee: Codex; owner perspective: Backend engineer.
+
+Release 0.2 completed: atomic successful audits, durable independent denial records, append-only runtime access, separately protected reasons, purposeful global reads, and current-access history filtering. See [Release 0.2 evidence](RELEASE_0_2.md).
 
 Dependencies: T011, T012. Requirements: ID-07, PRD sections 3, 16.
 
@@ -288,7 +321,9 @@ Verification: Test scoped audit queries, reason capture, append restrictions, an
 
 ### T014 Implement email invitations
 
-- [ ] Status: todo; assignee: unassigned; owner perspective: Backend engineer.
+- [x] Status: Completed; assignee: Codex; owner perspective: Backend engineer.
+
+Release 0.2 completed: scoped invitation creation/resend/revoke/accept, hash-only tokens, verified target binding, inviter reauthorization, Mailpit delivery, expiry/reuse checks and browser acceptance. Live email remains deferred. See [Release 0.2 evidence](RELEASE_0_2.md).
 
 Dependencies: T011, T012, T010. Requirements: ID-02, ID-04.
 
@@ -302,7 +337,9 @@ Verification: Test direct student invite, advisor invite, email mismatch, duplic
 
 ### T015 Implement requests and approval queues
 
-- [ ] Status: todo; assignee: unassigned; owner perspective: Backend engineer.
+- [x] Status: Completed; assignee: Codex; owner perspective: Backend engineer.
+
+Release 0.2 completed: self-service requests/status, correctly scoped decision queues, manager requests decided only by platform super admins, required advisor activation, transactional decisions, idempotency and stale/concurrent-decision tests. See [Release 0.2 evidence](RELEASE_0_2.md).
 
 Dependencies: T014. Requirements: ID-03–04.
 
@@ -316,7 +353,9 @@ Verification: Test each request route, duplicate decisions, wrong scope, rejecti
 
 ### T016 Implement suspension and delegated staff management
 
-- [ ] Status: todo; assignee: unassigned; owner perspective: Backend engineer.
+- [x] Status: Completed; assignee: Codex; owner perspective: Backend engineer.
+
+Release 0.2 completed: membership lifecycle, individual secretary delegation, scoped platform-admin ceilings, audited one-time bootstrap, serialized last-super-admin protection, immediate account/session suspension and explicit grant restoration. See [Release 0.2 evidence](RELEASE_0_2.md).
 
 Dependencies: T015, T013. Requirements: ID-05, ID-07.
 
@@ -332,7 +371,9 @@ Verification: Test last-admin guard, delegation ceilings, session revocation, an
 
 ### T017 Implement assignment and reassignment
 
-- [ ] Status: todo; assignee: unassigned; owner perspective: Backend engineer.
+- [x] Status: Completed; assignee: Codex; owner perspective: Backend engineer.
+
+Release 0.2 completed: eligible/capacity selectors, required primary advisor on activation, immutable assignment history, optimistic revisions, capacity contention, reassignment queue, and immediate former-advisor denial. See [Release 0.2 evidence](RELEASE_0_2.md).
 
 Dependencies: T015, T016. Requirements: ID-06.
 
@@ -346,7 +387,9 @@ Verification: Test reassignment, concurrent assignment, wrong department, inacti
 
 ### T018 Cancel stale jobs caches and streams
 
-- [ ] Status: todo; assignee: unassigned; owner perspective: Backend engineer.
+- [ ] Status: Inprogress; assignee: Codex; owner perspective: Backend engineer.
+
+Release 0.2 subset completed: transactional grant/relationship epochs, affected-advisor epoch changes, identity/scope-bound UI invalidation and invitation-delivery reauthorization. Generation jobs, output commits, streams, citations and general notification cancellation remain open. See [Release 0.2 evidence](RELEASE_0_2.md).
 
 Dependencies: T017. Requirements: ID-06, RG-08.
 
@@ -362,9 +405,11 @@ Verification: Exercise reassignment while a synthetic generation job and notific
 
 ### T019 Implement academic profile versions
 
-- [ ] Status: todo; assignee: unassigned; owner perspective: Backend engineer.
+- [x] Status: Completed; assignee: Codex; owner perspective: Backend engineer.
 
-Dependencies: T017, T003. Requirements: ON-01–04.
+Release 0.3 completed for synthetic-local scope. See [acceptance evidence](RELEASE_0_3.md) and [intake contract](decisions/intake-contract.md).
+
+Dependencies: T017, T003, T061. Requirements: ON-01–04.
 
 Deliverables: backend profile schemas, migrations, and versioned profile API.
 
@@ -376,7 +421,9 @@ Verification: Test catalog validation, self-reported versus verified facts, conf
 
 ### T020 Build initial questions and profile review
 
-- [ ] Status: todo; assignee: unassigned; owner perspective: Frontend engineer.
+- [x] Status: Completed; assignee: Codex; owner perspective: Frontend engineer.
+
+Release 0.3 completed for synthetic-local scope. See [acceptance evidence](RELEASE_0_3.md) and [intake contract](decisions/intake-contract.md).
 
 Dependencies: T019, T010. Requirements: ON-01–04.
 
@@ -390,7 +437,9 @@ Verification: Test incomplete/resumed onboarding, validation, correction, and ke
 
 ### T021 Propagate material profile changes
 
-- [ ] Status: todo; assignee: unassigned; owner perspective: Backend engineer.
+- [x] Status: Completed; assignee: Codex; owner perspective: Backend engineer.
+
+Release 0.3 completed for synthetic-local scope. See [acceptance evidence](RELEASE_0_3.md) and [intake contract](decisions/intake-contract.md).
 
 Dependencies: T019, T018. Requirements: ON-04, RG-08, FO-05.
 
@@ -406,7 +455,9 @@ Verification: Test version invalidation and durable idempotent change-event emis
 
 ### T022 Implement authorized uploads and pasted text
 
-- [ ] Status: todo; assignee: unassigned; owner perspective: Backend engineer.
+- [x] Status: Completed; assignee: Codex; owner perspective: Backend engineer.
+
+Release 0.3 completed for synthetic-local scope. See [acceptance evidence](RELEASE_0_3.md) and [intake contract](decisions/intake-contract.md).
 
 Dependencies: T012, T011. Requirements: KN-01–02.
 
@@ -420,7 +471,9 @@ Verification: Test scope forgery, metadata privacy, oversized/encrypted input, a
 
 ### T023 Implement isolated scanning and extraction
 
-- [ ] Status: todo; assignee: unassigned; owner perspective: Backend engineer.
+- [x] Status: Completed; assignee: Codex; owner perspective: Backend engineer.
+
+Release 0.3 completed for synthetic-local scope. See [acceptance evidence](RELEASE_0_3.md) and [intake contract](decisions/intake-contract.md).
 
 Dependencies: T022. Requirements: KN-01, KN-03.
 
@@ -434,7 +487,9 @@ Verification: Run parser fixture tests for malformed, scanned, supported, and ma
 
 ### T024 Build source management and pipeline status
 
-- [ ] Status: todo; assignee: unassigned; owner perspective: Frontend engineer.
+- [x] Status: Completed; assignee: Codex; owner perspective: Frontend engineer.
+
+Release 0.3 completed for synthetic-local scope. See [acceptance evidence](RELEASE_0_3.md) and [intake contract](decisions/intake-contract.md).
 
 Dependencies: T022, T023. Requirements: KN-01–03, PRD section 11.
 
@@ -612,7 +667,9 @@ Verification: Test visibility boundaries, author labels, assignment revocation, 
 
 ### T036 Implement outbox publishing and delivery deduplication
 
-- [ ] Status: todo; assignee: unassigned; owner perspective: Backend engineer.
+- [ ] Status: Inprogress; assignee: Codex; owner perspective: Backend engineer.
+
+Release 0.2 subset completed: business-transaction outbox metadata and restricted invitation.send SMTP consumer, reauthorization/cancellation, bounded retries and real Mailpit delivery tests. SMTP can repeat email after a crash; acceptance is single-use. General publishing, consumers, notifications and dead-letter UI remain open. See [Release 0.2 evidence](RELEASE_0_2.md).
 
 Dependencies: T007, T002, T011. Requirements: HU-04.
 
@@ -776,7 +833,7 @@ Verification: Test return/resubmit, reassignment, withdrawal, source/policy upda
 
 - [ ] Status: todo; assignee: unassigned; owner perspective: Frontend engineer.
 
-Dependencies: T015, T016, T013, T038, T045, T024. Requirements: PRD sections 3, 11.
+Dependencies: T015, T016, T013, T038, T045, T024, T061. Requirements: PRD sections 3, 11.
 
 Deliverables: frontend role dashboards, scope switcher, history and review queues.
 

@@ -16,4 +16,12 @@ Workers use idempotent events and reauthorize current scope; use an outbox for a
 
 Implement unit and database integration tests for access policies, retrieval filters, race conditions, stale signatures, outbox retries, and assignment changes. Use a real pgvector Postgres test container when checking SQL isolation. SQLite is not a substitute for RLS or concurrency tests.
 
-Release 0.1 commands: uv sync --frozen; uv run ruff check .; uv run mypy app; uv run pytest; uv run alembic upgrade head against a disposable test database. The app, migrations, tests, and uv.lock now exist. Follow ../README.md; run only on the disposable local database. Live identity and later advising services remain unimplemented.
+Current local commands: uv sync --frozen; uv run ruff check .; uv run mypy app; uv run pytest; uv run alembic upgrade head against a disposable test database. The app, migrations, tests, and uv.lock now exist. Follow ../README.md; run only on the disposable local database. Live identity and later advising services remain unimplemented.
+
+
+Release 0.2 staff services live in memberships.py, assignments.py, staff_security.py, staff_services.py, staff_routes.py, and outbox.py. Preserve the short identity transaction before business locking, current session/grant revalidation, forced RLS and non-owner roles. Bootstrap is operator-only and cannot silently promote legacy role labels. Run invitation delivery with `uv run python -m app.mail_worker`; only its restricted role may consume invitation.send. Manager self-service requests require a platform super admin. See ../docs/decisions/staff-contract.md for mutation, pagination and audit boundaries.
+
+T061 organization metadata services are in organizations.py and organization_schemas.py. Keep OrganizationAdminGrant separate from operational RoleGrant. Preserve active-organization guards, serialized archival/activation/delivery, metadata-only history and explicit restoration after account suspension. Run tests/test_organizations.py against real PostgreSQL.
+
+
+Release 0.3 profile services are in profiles.py and intake_models.py; source routes are in sources.py. Immutable snapshots have no runtime UPDATE/DELETE grants. Bind profiles and private sources to student membership IDs; schema administration and source capabilities do not imply record access. Source extraction ends at needs_review and is never publication. Run the trusted host worker with `uv run python -m app.ingest_worker`; it uses advisory_ingest and launches isolated containers without giving Docker access to the API. Build/update through README.md. CI must run `RUN_PARSER_TESTS=1 uv run pytest tests/test_parser.py` with the real scanner, signatures and OCR image; mocks alone do not complete T023.

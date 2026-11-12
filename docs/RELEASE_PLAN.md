@@ -33,6 +33,8 @@ Status: Completed for the agreed synthetic-local scope on November 11, 2026. See
 
 Goal: Make the app usable for staff operations and access boundaries.
 
+Status: Completed for the agreed synthetic-local scope on November 11, 2026. See [verification and limitations](RELEASE_0_2.md). T011–T017 cover current resources; T018 includes epochs/cache invalidation and T036 includes local invitation delivery. Their later-release work remains open.
+
 ### Backend
 - T011: capability checks and role ceilings
 - T012: scoped queries and row policies
@@ -57,7 +59,13 @@ Goal: Make the app usable for staff operations and access boundaries.
 - A manager can approve/reject requests
 - A suspended user loses access immediately
 
+## Organization administration prerequisite — T061
+
+Completed for synthetic-local scope after Release 0.2 and before Release 0.3. Includes college/department creation and editing, explicit metadata-administration delegation, request-enrollment controls, safe archive/restore, separate manager appointment, forced RLS and audited UI/API workflows. See [T061 implementation and acceptance](T061_HANDOFF.md).
+
 ## Release 0.3 — Student onboarding and document intake
+
+Completed for synthetic-local scope. See [Release 0.3 evidence](RELEASE_0_3.md) and [intake decisions](decisions/intake-contract.md). T021 delivers the context/event interface; recommendation and form consumers remain future work.
 
 Goal: Deliver a visible student journey with profile capture and uploaded documents.
 

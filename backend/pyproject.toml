@@ -1,11 +1,29 @@
 [project]
 name = "student-advisory-api"
-version = "0.1.0"
+version = "0.3.0"
 requires-python = ">=3.12,<3.15"
-dependencies = ["fastapi>=0.115,<1", "uvicorn>=0.34,<1", "sqlalchemy>=2.0,<3", "psycopg[binary]>=3.2,<4", "alembic>=1.15,<2", "pydantic-settings>=2.8,<3", "PyJWT>=2.10,<3"]
+dependencies = [
+    "fastapi>=0.115,<1",
+    "uvicorn>=0.34,<1",
+    "sqlalchemy>=2.0,<3",
+    "psycopg[binary]>=3.2,<4",
+    "alembic>=1.15,<2",
+    "pydantic-settings>=2.8,<3",
+    "PyJWT>=2.10,<3",
+    "python-multipart>=0.0.33",
+]
 
 [dependency-groups]
-dev = ["pytest>=8,<10", "httpx>=0.28,<1", "ruff>=0.11,<1", "mypy>=1.15,<2", "PyYAML==6.0.3"]
+dev = [
+    "pytest>=8,<10",
+    "httpx>=0.28,<1",
+    "ruff>=0.11,<1",
+    "mypy>=1.15,<2",
+    "PyYAML==6.0.3",
+    "reportlab>=5.1.0",
+    "python-docx>=1.2.0",
+    "pypdf>=7.0.1",
+]
 
 [tool.ruff]
 line-length = 100
