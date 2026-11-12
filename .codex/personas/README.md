@@ -11,3 +11,6 @@ Read a brief explicitly when its expertise is useful. Each brief defines a persp
 | security-reviewer.md | Privacy and cross-scope negative tests |
 | cloud-engineer.md | GKE, vLLM, IAM, rollout and operations |
 | qa-reviewer.md | Independent acceptance evidence and release gaps |
+| [commit-steward.md](commit-steward.md) | Commit completed, verified task changes locally while preserving unrelated work |
+
+For repository update tasks, apply the commit-steward brief at completion as required by the root [AGENTS.md](../../AGENTS.md). This is the default finish step for the active agent; persona Markdown does not create a background file watcher or authorize parallel agents.

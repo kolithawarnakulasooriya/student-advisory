@@ -44,5 +44,8 @@
 ## Personas and skills
 Read .codex/personas/README.md before selecting a specialist perspective. Persona Markdown does not register autonomous agents. Use the repo workflows under .agents/skills for focused tasks. Do not start parallel agents unless the user requests delegation. Keep docs and instructions synchronized with implementation.
 
+## Commit completed updates
+For tasks that update repository files, record the starting Git/index state and apply [.codex/personas/commit-steward.md](.codex/personas/commit-steward.md) after implementation, documentation and relevant checks pass. Create a local commit of only the task-owned changes without another confirmation, unless the user explicitly requests uncommitted work. Preserve unrelated edits and staged files, keep hooks enabled, and report the resulting commit hash. This completion routine does not run on individual file saves, start parallel agents or authorize pushing/history rewrites. Planning and read-only tasks do not create commits.
+
 ## Code review rules
 Block cross-scope data access, uncited institutional claims, staff-note leakage, implicit privilege escalation, signature mutation, secrets, model-triggered actions without backend authorization, and migrations that destroy active records without an approved data plan.
