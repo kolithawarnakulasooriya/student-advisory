@@ -11,11 +11,12 @@ from datetime import timedelta
 from typing import Any
 from uuid import UUID, uuid4
 
-from sqlalchemy import insert, select, text
+from sqlalchemy import insert, select, text, true
 from sqlalchemy.engine import Engine
 
 from app.config import Settings
 from app.db import context, make_engine, safe_runtime_role, transaction
+from app.inference import ResourceBusy, heavy_resource
 from app.intake_models import ExtractionArtifact, IngestionJob, Source, SourceVersion
 from app.models import OutboxEvent
 from app.private_storage import PrivateStorage
@@ -133,15 +134,19 @@ def current(db: Any, jid: UUID) -> bool:
     return bool(db.scalar(text("SELECT ingest_job_current(:id)"), {"id": jid}))
 
 
-def process_once(cfg: Settings) -> int:
+def process_once(cfg: Settings, source_version_id: UUID | None = None) -> int:
     engine = make_engine(cfg.ingest_database_url.get_secret_value())
     try:
-        return process(engine, cfg)
+        try:
+            with heavy_resource(engine):
+                return process(engine, cfg, source_version_id)
+        except ResourceBusy:
+            return 0
     finally:
         engine.dispose()
 
 
-def process(engine: Engine, cfg: Settings) -> int:
+def process(engine: Engine, cfg: Settings, source_version_id: UUID | None = None) -> int:
     with transaction(engine) as db:
         if not safe_runtime_role(db, "advisory_ingest"):
             raise ValueError("Unsafe ingestion database role")
@@ -164,6 +169,9 @@ def process(engine: Engine, cfg: Settings) -> int:
         job = db.scalar(
             select(IngestionJob)
             .where(IngestionJob.state == "uploaded")
+            .where(
+                IngestionJob.source_version_id == source_version_id if source_version_id else true()
+            )
             .order_by(IngestionJob.created_at, IngestionJob.id)
             .with_for_update(skip_locked=True)
             .limit(1)
@@ -267,10 +275,11 @@ def process(engine: Engine, cfg: Settings) -> int:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--once", action="store_true")
+    parser.add_argument("--source-version", type=UUID)
     args = parser.parse_args()
     cfg = Settings()
     while True:
-        processed = process_once(cfg)
+        processed = process_once(cfg, args.source_version)
         if args.once:
             return
         if not processed:

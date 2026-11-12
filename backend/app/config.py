@@ -34,6 +34,19 @@ class Settings(BaseSettings):
     parser_timeout_seconds: int = Field(default=240, ge=10, le=600)
     smtp_host: str = "127.0.0.1"
     smtp_port: int = Field(default=1025, ge=1, le=65535)
+    rag_database_url: SecretStr = SecretStr(
+        "postgresql+psycopg://advisory_rag:local-rag-only@127.0.0.1:5432/advisory_dev"
+    )
+    inference_gateway_url: str = "http://127.0.0.1:11435"
+    inference_gateway_token: SecretStr = SecretStr("")
+    inference_manifest_path: Path = (
+        Path(__file__).resolve().parents[2] / "infra/inference/models.lock.json"
+    )
+    inference_artifact_path: Path = Path(__file__).resolve().parents[2] / "local-data/inference"
+    inference_timeout_seconds: int = Field(default=180, ge=1, le=300)
+    vllm_url: str = "http://127.0.0.1:8001"
+    vllm_model: str = "advisory-chat"
+    vllm_token: SecretStr = SecretStr("")
     identity_issuer: str = "urn:advisory:synthetic"
     identity_audience: str = "advisory-api"
 
@@ -44,9 +57,29 @@ class Settings(BaseSettings):
             raise ValueError("Private storage must be outside the frontend directory")
         # This release deliberately has no live IdP or production serving mode.
         if self.app_env not in {"development", "test"} or self.auth_mode != "mock":
-            raise ValueError("Release 0.3 supports explicit development/test mock identity only")
-        if self.inference_provider not in {"mock", "disabled"}:
-            raise ValueError("Inference is unavailable in Release 0.3")
+            raise ValueError("Release 0.4 supports explicit development/test mock identity only")
+        if self.inference_provider not in {"mock", "disabled", "ollama", "vllm"}:
+            raise ValueError("Invalid inference provider")
+        for endpoint in (self.inference_gateway_url, self.vllm_url):
+            parsed = urlparse(endpoint)
+            if (
+                parsed.scheme != "http"
+                or parsed.hostname not in {"127.0.0.1", "localhost"}
+                or parsed.username
+                or parsed.password
+                or parsed.query
+                or parsed.fragment
+                or parsed.path
+            ):
+                raise ValueError("Local inference must use configured loopback HTTP endpoints")
+        token_file = self.inference_artifact_path / "gateway-token"
+        if self.inference_provider in {"ollama", "vllm"}:
+            if not self.inference_gateway_token.get_secret_value() and token_file.is_file():
+                self.inference_gateway_token = SecretStr(token_file.read_text().strip())
+            if len(self.inference_gateway_token.get_secret_value()) < 32:
+                raise ValueError("Private inference gateway token is required")
+            if self.inference_provider == "vllm" and not self.vllm_token.get_secret_value():
+                raise ValueError("Private vLLM authentication is required")
         if self.smtp_host not in {"127.0.0.1", "localhost"}:
             raise ValueError("Synthetic invitations require loopback SMTP")
         origin = urlparse(self.web_origin)
@@ -59,6 +92,7 @@ class Settings(BaseSettings):
             (self.auth_database_url, "advisory_auth"),
             (self.mail_database_url, "advisory_mail"),
             (self.ingest_database_url, "advisory_ingest"),
+            (self.rag_database_url, "advisory_rag"),
         ):
             if not secret.get_secret_value().startswith("postgresql+psycopg://"):
                 raise ValueError("PostgreSQL with psycopg is required")

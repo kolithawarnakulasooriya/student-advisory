@@ -235,7 +235,7 @@ def main() -> None:
             # Only the known fixture schema; retain migrations and vector extension.
             db.execute(
                 text(
-                    "TRUNCATE operational_reasons, audit_events, "
+                    "TRUNCATE embedding_configs, operational_reasons, audit_events, "
                     "idempotency_records, outbox_events, "
                     "verifications, sessions, role_grants, users, "
                     "org_units, institutions CASCADE"

@@ -46,9 +46,10 @@ def source_for(db: Session, sid: UUID, writing: bool = False) -> Source:
 
 def source_out(db: Session, source: Source, version: SourceVersion | None = None) -> SourceOut:
     version = version or db.scalar(
-        select(SourceVersion).where(
-            SourceVersion.source_id == source.id, SourceVersion.version == source.version
-        )
+        select(SourceVersion)
+        .where(SourceVersion.source_id == source.id)
+        .order_by(SourceVersion.version.desc())
+        .limit(1)
     )
     assert version
     job = db.scalar(
@@ -275,8 +276,9 @@ def get_source(
         global_read(db, request, purpose)
         source = source_for(db, sid)
         audit(db, request, "source.read", "source", sid, source.org_unit_id, source.institution_id)
-        response.headers["ETag"] = f'"{source.version}"'
-        return source_out(db, source)
+        result = source_out(db, source)
+        response.headers["ETag"] = f'"{result.version}"'
+        return result
 
 
 @router.get("/sources/{sid}/versions", response_model=Page[SourceOut])

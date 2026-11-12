@@ -1,0 +1,81 @@
+{
+  "retrieval": [
+    {
+      "question": "What must I complete before enrolling in SYN102?",
+      "labels": [
+        "catalog-2026"
+      ],
+      "scores": [
+        7.1023
+      ],
+      "recall_at_10": 1,
+      "reciprocal_rank": 1.0,
+      "admitted": [
+        "catalog-2026"
+      ]
+    },
+    {
+      "question": "Which prerequisite applies to SYN102?",
+      "labels": [
+        "catalog-2026"
+      ],
+      "scores": [
+        4.3563
+      ],
+      "recall_at_10": 1,
+      "reciprocal_rank": 1.0,
+      "admitted": [
+        "catalog-2026"
+      ]
+    },
+    {
+      "question": "What is the university tuition refund policy?",
+      "labels": [
+        "catalog-2026"
+      ],
+      "scores": [
+        -11.2893
+      ],
+      "recall_at_10": null,
+      "reciprocal_rank": null,
+      "admitted": []
+    }
+  ],
+  "dataset_hash": "306efa32de791b17f25c05584dcf66fe4b7ffa6d0dc10c2abf2e99b08ede2670",
+  "scope_leakage": 0,
+  "provider": "ollama",
+  "fingerprint": "394a199a8420854a29fc5c1a41700d515164768fc44e62a83bf6d66354d4ff0c",
+  "indexing_seconds": 8.706,
+  "generation": [
+    {
+      "label": "cited",
+      "seconds": 18.831,
+      "disposition": "answered",
+      "citation_count": 1
+    },
+    {
+      "label": "unsupported",
+      "seconds": 0.161,
+      "disposition": "needs_advisor",
+      "citation_count": 0
+    },
+    {
+      "label": "unrelated",
+      "seconds": 1.556,
+      "disposition": "needs_advisor",
+      "citation_count": 0
+    },
+    {
+      "label": "guidance_followup",
+      "seconds": 21.589,
+      "disposition": "answered"
+    }
+  ],
+  "durable_case": true,
+  "synthetic_only": true,
+  "observed_on": "2026-11-12",
+  "platform": "Apple M1 CPU, 8 GiB host RAM; Docker approximately 4 GiB; linux/arm64 containers",
+  "command": "RUN_MODEL_TESTS=1 uv run pytest tests/test_real_models.py -q -s",
+  "intake": "Synthetic extraction artifacts in this focused gate; actual scanner/OCR pipeline covered separately by real parser and browser tests.",
+  "scope": "Tiny synthetic regression fixture; no pilot or production accuracy claim."
+}

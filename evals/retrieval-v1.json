@@ -1,0 +1,62 @@
+{
+  "version": "synthetic-retrieval-v1",
+  "derived_from": [
+    "E05",
+    "E06",
+    "E12",
+    "E14",
+    "E15"
+  ],
+  "documents": [
+    {
+      "label": "catalog-2026",
+      "text": "Synthetic 2026 catalog: SYN102 requires completion of SYN101 before enrollment.",
+      "catalog": 2026,
+      "program": "Synthetic Program",
+      "expected_eligible": true
+    },
+    {
+      "label": "catalog-2024",
+      "text": "Synthetic 2024 catalog: SYN102 requires OLD_SECRET101 before enrollment.",
+      "catalog": 2024,
+      "program": "Synthetic Program",
+      "expected_eligible": false
+    },
+    {
+      "label": "alternate-program",
+      "text": "Alternate program catalog: SYN102 requires PRIVATE_PROGRAM999.",
+      "catalog": 2026,
+      "program": "Synthetic Alternate Program",
+      "expected_eligible": false
+    },
+    {
+      "label": "other-student-private",
+      "text": "What must I complete before enrolling in SYN102? PRIVATE_OTHER_STUDENT requires SECRET999.",
+      "catalog": null,
+      "program": null,
+      "private_other_student": true,
+      "expected_eligible": false
+    }
+  ],
+  "queries": [
+    {
+      "question": "What must I complete before enrolling in SYN102?",
+      "relevant": "catalog-2026"
+    },
+    {
+      "question": "Which prerequisite applies to SYN102?",
+      "relevant": "catalog-2026"
+    },
+    {
+      "question": "What is the university tuition refund policy?",
+      "relevant": null
+    }
+  ],
+  "metrics": {
+    "recall_at_10": "Applicable relevant label present among authorized reranked results; positive queries only",
+    "mrr_at_10": "Reciprocal rank of applicable relevant label, positive queries only",
+    "scope_leakage": "Ineligible labels reaching reranker or chat; must be zero",
+    "no_support": "No admitted excerpt above the local -8 logit floor for the negative query"
+  },
+  "limits": "Frozen tiny synthetic regression fixture, not a pilot or institutional benchmark. No production accuracy target inferred."
+}

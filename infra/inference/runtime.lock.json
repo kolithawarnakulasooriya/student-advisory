@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "tested_platform": "linux/arm64",
+  "tested_gateway_image_id": "sha256:58f424ea5065c85bf0a12f7ad0b0f3a957d8bb9c322453b754fd0f56102893cb",
+  "python_base": "python:3.12-slim@sha256:5e2bdb1b0d542d5039cffb8181c65930093949194a65c365dfb1b0fe13a4fa5b",
+  "sources": {
+    "Dockerfile": "d0777482b5640d0b5f877357798a1f846e09f6268d3dc0a2f1edc818b9661a10",
+    "gateway.py": "7fc8bb383cfdd980acecf557e3620a73cc85b162c508616e325efd076e0cc93b",
+    "requirements.lock": "197c25a6578bf51d1d17d716feb8999e94f95d29c788f561ee2c49f6e75c9270"
+  }
+}

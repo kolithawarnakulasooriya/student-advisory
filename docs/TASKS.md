@@ -389,7 +389,7 @@ Verification: Test reassignment, concurrent assignment, wrong department, inacti
 
 - [ ] Status: Inprogress; assignee: Codex; owner perspective: Backend engineer.
 
-Release 0.2 subset completed: transactional grant/relationship epochs, affected-advisor epoch changes, identity/scope-bound UI invalidation and invitation-delivery reauthorization. Generation jobs, output commits, streams, citations and general notification cancellation remain open. See [Release 0.2 evidence](RELEASE_0_2.md).
+Release 0.2 subset completed: transactional grant/relationship epochs, affected-advisor epoch changes, identity/scope-bound UI invalidation and invitation-delivery reauthorization. Release 0.4 adds current-authority generation/index jobs, output commits, citation reauthorization and advisor access-loss coverage. Future-resource streams and general notification cancellation remain open. See [Release 0.2 evidence](RELEASE_0_2.md).
 
 Dependencies: T017. Requirements: ID-06, RG-08.
 
@@ -505,7 +505,7 @@ Verification: Test each role's upload scope, processing errors, and accessible p
 
 ### T025 Implement chunks and embedding versions
 
-- [ ] Status: todo; assignee: unassigned; owner perspective: Retrieval engineer.
+- [x] Status: Completed; assignee: Codex; owner perspective: Retrieval engineer.
 
 Dependencies: T023, T003. Requirements: KN-03–04, RG-01.
 
@@ -519,7 +519,7 @@ Verification: Test deterministic chunk metadata, retry deduplication, and parall
 
 ### T026 Implement publication withdrawal and citations
 
-- [ ] Status: todo; assignee: unassigned; owner perspective: Backend engineer.
+- [x] Status: Completed; assignee: Codex; owner perspective: Backend engineer.
 
 Dependencies: T025, T024. Requirements: KN-04, KN-06–07.
 
@@ -533,7 +533,7 @@ Verification: Test publication races, cache invalidation, withdrawal, wrong-stud
 
 ### T027 Implement rules and prompt release controls
 
-- [ ] Status: todo; assignee: unassigned; owner perspective: Retrieval engineer.
+- [x] Status: Completed; assignee: Codex; owner perspective: Retrieval engineer.
 
 Dependencies: T026, T011. Requirements: KN-05, RG-03–04.
 
@@ -549,7 +549,7 @@ Verification: Test forbidden overrides, rule validation, release versioning, and
 
 ### T028 Implement filtered hybrid retrieval
 
-- [ ] Status: todo; assignee: unassigned; owner perspective: Retrieval engineer.
+- [x] Status: Completed; assignee: Codex; owner perspective: Retrieval engineer.
 
 Dependencies: T025, T026, T019. Requirements: RG-01.
 
@@ -563,7 +563,7 @@ Verification: Measure Recall@10 on labeled fixtures and inspect candidates for c
 
 ### T029 Implement private vLLM client and mock adapter
 
-- [ ] Status: todo; assignee: unassigned; owner perspective: Backend engineer.
+- [x] Status: Completed; assignee: Codex; owner perspective: Backend engineer.
 
 Dependencies: T005, T002. Requirements: RG-07–08, PRD section 14.
 
@@ -577,7 +577,7 @@ Verification: Run adapter contract tests for auth, timeout, malformed model JSON
 
 ### T030 Implement grounded structured responses
 
-- [ ] Status: todo; assignee: unassigned; owner perspective: Retrieval engineer.
+- [x] Status: Completed; assignee: Codex; owner perspective: Retrieval engineer.
 
 Dependencies: T028, T029, T027. Requirements: RG-02, RG-06–08.
 
@@ -593,7 +593,7 @@ Verification: Run answerable, unanswerable, conflict, injection, missing-fact, a
 
 ### T031 Implement versioned conversations and generation jobs
 
-- [ ] Status: todo; assignee: unassigned; owner perspective: Backend engineer.
+- [x] Status: Completed; assignee: Codex; owner perspective: Backend engineer.
 
 Dependencies: T030, T018, T021. Requirements: RG-08–09.
 
@@ -607,7 +607,7 @@ Verification: Test timeout/retry, duplicate request, source withdrawal during ge
 
 ### T032 Build cited chat and evidence drawer
 
-- [ ] Status: todo; assignee: unassigned; owner perspective: Frontend engineer.
+- [x] Status: Completed; assignee: Codex; owner perspective: Frontend engineer.
 
 Dependencies: T031, T020. Requirements: RG-02, RG-06, PRD section 11.
 
@@ -623,7 +623,7 @@ Verification: Test safe Markdown/links, forbidden citations, keyboard flow, retr
 
 ### T033 Implement guidance and private notes
 
-- [ ] Status: todo; assignee: unassigned; owner perspective: Backend engineer.
+- [x] Status: Completed; assignee: Codex; owner perspective: Backend engineer.
 
 Dependencies: T031, T017. Requirements: RG-04–05.
 
@@ -637,7 +637,7 @@ Verification: Test wrong advisor, expiry, supersession, private marker non-discl
 
 ### T034 Prioritize guidance in subsequent questions
 
-- [ ] Status: todo; assignee: unassigned; owner perspective: Retrieval engineer.
+- [x] Status: Completed; assignee: Codex; owner perspective: Retrieval engineer.
 
 Dependencies: T033, T030. Requirements: RG-04–05.
 
@@ -651,7 +651,7 @@ Verification: Run no-auto-reply, next-turn preference, expired instruction, and 
 
 ### T035 Build advisor conversation tools
 
-- [ ] Status: todo; assignee: unassigned; owner perspective: Frontend engineer.
+- [x] Status: Completed; assignee: Codex; owner perspective: Frontend engineer.
 
 Dependencies: T033, T034, T032. Requirements: RG-05, PRD section 11.
 
@@ -683,7 +683,7 @@ Verification: Test crash between publish/ack, bounded retry, malformed event, an
 
 ### T037 Implement advisor cases and routing
 
-- [ ] Status: todo; assignee: unassigned; owner perspective: Backend engineer.
+- [ ] Status: Inprogress; assignee: Codex; owner perspective: Backend engineer.
 
 Dependencies: T031, T017, T036. Requirements: HU-01–03, HU-05.
 
@@ -695,9 +695,11 @@ Acceptance: Missing advisors do not lose requests; model recovery does not close
 
 Verification: Test duplicate requests, no advisor, reassignment, invalid transitions, and timezone deadlines.
 
+Release 0.4 delivers durable cases/receipt/status and the current-authority queue. Notification, email and business-calendar/SLA portions remain pending.
+
 ### T038 Implement notifications email and case views
 
-- [ ] Status: todo; assignee: unassigned; owner perspective: Frontend engineer.
+- [ ] Status: Inprogress; assignee: Codex; owner perspective: Frontend engineer.
 
 Dependencies: T037, T036, T032. Requirements: HU-04–05, PRD section 11.
 
@@ -708,6 +710,8 @@ Work: Show case status, staff replies, unread events, and authenticated links; e
 Acceptance: Email failure preserves the case and an authoritative in-app notification.
 
 Verification: Test mail failure/retry, exact recipient scope, sensitive-content exclusion, and case acknowledgment UI.
+
+Release 0.4 delivers durable cases/receipt/status and the current-authority queue. Notification, email and business-calendar/SLA portions remain pending.
 
 ## B13 Plans and academic validation
 
@@ -1047,3 +1051,5 @@ Reviewer and completion date:
 ```
 
 Keep test outputs in the agreed project/CI report location and reference them here or in the PR. Avoid embedding student records, tokens, private source content, or signed artifacts in handoff text. If an institutional decision changes the product behavior, update the PRD and this task list together rather than implementing a silent exception.
+
+Release 0.4 synthetic-local acceptance for T025–T035 is recorded in [the release evidence](RELEASE_0_4.md). T037–T038 are partial; notification/email/business-calendar portions remain Inprogress.

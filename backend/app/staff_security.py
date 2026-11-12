@@ -29,6 +29,8 @@ PLATFORM_CAPS = SECRETARY_CAPS | {
     "profile.configure",
     "source.manage",
     "source.read",
+    "source.publish",
+    "rules.manage",
     "advisor.invite",
     "advisor.approve",
     "advisor.manage",
@@ -250,6 +252,15 @@ def own_scope_capabilities(db: Session, scope: UUID | None) -> list[str]:
     )
     for action in ("profile.configure", "source.manage", "source.read"):
         if db.scalar(text("SELECT intake_cap(:action,:scope)"), {"action": action, "scope": scope}):
+            result.append(action)
+    for action in ("source.publish", "rules.manage", "prompt.manage"):
+        # Availability projection contains no record data; actions still require a purpose.
+        global_available = (
+            platform(db) and db.scalar(text("SELECT current_setting('app.mfa',true)")) == "true"
+        )
+        if global_available or db.scalar(
+            text("SELECT rag_cap(:action,:scope)"), {"action": action, "scope": scope}
+        ):
             result.append(action)
     if any(g.role in {"student", "advisor"} for g in own):
         result.append("roster.read")

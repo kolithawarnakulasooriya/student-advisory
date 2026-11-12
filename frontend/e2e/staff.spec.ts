@@ -66,7 +66,10 @@ async function chooseAdvisor(page: Page, email = "advisor-a@advisory.test") {
 }
 async function findRow(page: Page, email: string, endpoint: string) {
   const response = page.waitForResponse(
-    (r) => r.url().includes(endpoint) && r.request().method() === "GET",
+    (r) =>
+      r.url().includes(endpoint) &&
+      new URL(r.url()).searchParams.get("limit") === "10" &&
+      r.request().method() === "GET",
   );
   await page
     .getByRole("button", { name: "Refresh workflow", exact: true })
@@ -84,7 +87,10 @@ async function findRow(page: Page, email: string, endpoint: string) {
     const next = page.getByRole("button", { name: "Next page", exact: true });
     if (!(await next.count())) break;
     const response = page.waitForResponse(
-      (r) => r.url().includes(endpoint) && r.url().includes("cursor="),
+      (r) =>
+        r.url().includes(endpoint) &&
+        new URL(r.url()).searchParams.get("limit") === "10" &&
+        r.url().includes("cursor="),
     );
     await next.click();
     const data = await (await response).json();

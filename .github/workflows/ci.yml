@@ -62,6 +62,21 @@ jobs:
           uv run mypy app
           uv run pytest
           uv run python -m app.contracts --check
+      - name: Prepare and verify private CPU inference
+        run: |
+          python scripts/prepare_inference.py
+          python scripts/start_inference.py --build
+      - name: Real Ollama retrieval and advising acceptance
+        working-directory: backend
+        run: RUN_MODEL_TESTS=1 uv run pytest tests/test_real_models.py -q -s
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: synthetic-model-results
+          path: |
+            local-data/real-model-report.json
+            local-data/inference/runtime-observed.json
+          if-no-files-found: ignore
       - run: python scripts/generate_postman.py --check
       - run: uv run --project backend python scripts/validate_package.py
       - run: npm ci

@@ -1,6 +1,6 @@
 # Student Advisory
 
-Release 0.3 provides a local Next.js/FastAPI application with synthetic registration and verification, revocable cookie sessions, scoped staff workflows, versioned student onboarding and private document intake. PostgreSQL with pgvector is the source of truth. No real student records, live identity provider, advising answers, or cloud resources are used.
+Release 0.4 adds reviewed evidence publication, filtered hybrid retrieval, quote-first cited answers, advisor guidance and durable human-help cases to the local onboarding/intake application. PostgreSQL with pgvector is the source of truth. Use synthetic data only; live identity and cloud deployment remain future work.
 
 ## Run locally
 
@@ -10,7 +10,7 @@ From the repository root:
 
 ```bash
 python3 scripts/dev_env.py
-docker compose up -d --wait
+docker compose up -d --wait db mailpit
 uv sync --project backend --frozen
 ```
 
@@ -103,7 +103,7 @@ Release 0.2 implements invitations, membership approvals, assignment authorizati
 
 The local app now includes scoped invitations, requests/approvals, secretary delegation, membership lifecycle, advisor assignments, student summaries, and append-only administrative audit. Live identity and real email remain unavailable.
 
-After upgrading an existing checkout, run `uv sync --project backend --frozen`, `docker compose up -d --wait`, then the documented Alembic upgrade and synthetic seed commands. Existing records are retained. Seed setup never silently creates platform-level authority.
+After upgrading an existing checkout, run `uv sync --project backend --frozen`, `docker compose up -d --wait db mailpit`, then the documented Alembic upgrade and synthetic seed commands. Existing records are retained. Seed setup never silently creates platform-level authority.
 
 Bootstrap the first platform super admin explicitly, once, from backend:
 
@@ -154,7 +154,7 @@ After the normal setup, run `uv run alembic upgrade head` and the existing seed 
 
 Managers use **Onboarding configuration** to configure questions, valid programs/tracks, catalogs and terms. Students use **Academic profile** to save a draft, resume, review, confirm their catalog and complete setup. Advisors review facts through append-only confirmations/disputes. Required choices are synthetic examples, not institutional requirements.
 
-Staff use **Documents** to upload PDF/DOCX/text/Markdown or paste text. Students can read their own clean documents; they cannot upload. Staff see scoped progress, failure explanations, metadata revisions, replacement, retry and archive actions. Extracted content ends at **needs review**; publishing and advising answers remain Release 0.4 work.
+Staff use **Documents** to upload PDF/DOCX/text/Markdown or paste text. Students can read their own clean documents; they cannot upload. Staff see scoped progress, failure explanations, metadata revisions, replacement, retry and archive actions. Extraction ends at **needs review**. Release 0.4 adds separate authorized metadata review, indexing and publication; extraction alone never makes evidence available to chat.
 
 Build the actual scanner/parser image and initialize its signatures from the repository root:
 
@@ -191,3 +191,46 @@ ADVISORY_E2E_API_PORT=8100 ADVISORY_E2E_WEB_PORT=3100 npm run test:e2e
 ```
 
 See [Release 0.3 acceptance evidence](docs/RELEASE_0_3.md) for delivered requirements and limitations.
+
+
+## Release 0.4 private CPU models and advising
+
+First complete the database/application and Release 0.3 scanner setup above. Keep the parser/scanner image at 0.3; its isolated format handling remains shared with this release. From the repository root:
+
+```bash
+python3 scripts/prepare_inference.py
+python3 scripts/start_inference.py --build
+```
+
+Preparation downloads only public pinned models/tokenizers/ONNX weights, into ignored local-data. It creates a private gateway token without printing it. Changed model artifacts or digests fail closed. `--build` explicitly builds the hash-checked, wheel-hash-pinned gateway and records its local image identity. Later starts use `python3 scripts/start_inference.py` and reject image drift. Ollama has no published host port or external network; only the authenticated gateway listens at 127.0.0.1:11435. Never proxy that port to the browser. Model downloading is separate from runtime execution; cloud features are disabled.
+
+Start the backend with real inference enabled:
+
+```bash
+cd backend
+INFERENCE_PROVIDER=ollama uv run uvicorn app.main:create_app --factory --host 127.0.0.1 --port 8000 --no-access-log
+```
+
+Run these trusted workers in separate backend terminals; they share a PostgreSQL heavy-work lease so ingestion, indexing and generation serialize:
+
+```bash
+uv run python -m app.ingest_worker
+INFERENCE_PROVIDER=ollama uv run python -m app.advising_worker
+```
+
+The API has no Docker access. The intake worker launches the isolated scanner/parser; advisory_rag is a dedicated non-owner database role. Stop workers with Ctrl-C. `--once` processes at most one available job; intake also accepts `--source-version UUID` for a focused operator run with the same authorization checks. Keep one worker of each kind initially. Failed generation retries reuse the question, and failed indexing retries reuse the immutable source version, up to three attempts.
+
+Managers use **Documents** to inspect clean extraction, record a review reason, index and explicitly publish a ready build. Publication and replacement are separate. **Evidence rules and releases** provides bounded department settings, typed evidence-backed rules and evaluated activation/rollback. Global prompt styles and complete embedding rebuild activation require super-admin authority. Advisors have no implicit publishing capability.
+
+Students complete their profile, open **Advising and human help**, start a conversation and ask a question. Replies remain buffered until validation finishes and quote exact applicable published excerpts. Evidence buttons resolve through current authorization. Advisor guidance never triggers a reply; private notes and explicit AI drafts have separate staff views. An assigned advisor reviews a private draft before publishing it as their own guidance. Staff use **Human help queue** for current-authority cases; requests survive model outages and follow the current primary assignment or manager fallback.
+
+The CPU starting limits are one active heavy job, one loaded Ollama model/request, 4,096 context tokens, 512 output tokens, a 2 GiB Ollama limit and a 512 MiB ONNX gateway limit. English synthetic fixtures only. See [acceptance results and observed limitations](docs/RELEASE_0_4.md) and the [advising contract](docs/decisions/advising-contract.md). These limits require measurement on each machine.
+
+Real model acceptance is separate from broad deterministic regressions:
+
+```bash
+cd backend
+RUN_MODEL_TESTS=1 uv run pytest tests/test_real_models.py -q -s
+```
+
+This requires the real private profile and fails on model/service drift or downtime. It never substitutes mocks. The report is written to ignored local-data/real-model-report.json. Ordinary browser regressions explicitly use the deterministic adapter; the separate Ollama gate verifies real retrieval/generation. The vLLM-compatible adapter has contract tests only; no GPU host is provisioned. General notifications, case email/SLA automation, comprehensive plan validation, saved plans and signatures remain pending.

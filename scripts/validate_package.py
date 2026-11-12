@@ -46,10 +46,10 @@ for path in skills:
 
 # Walk source assets only; do not traverse dependency or build trees.
 import os
-ignored = {'.git', 'node_modules', '.venv', '.next', '.cache', '.mypy_cache', '.pytest_cache', '.ruff_cache', 'playwright-report', 'test-results'}
+ignored = {'local-data', '.git', 'node_modules', '.venv', '.next', '.cache', '.mypy_cache', '.pytest_cache', '.ruff_cache', 'playwright-report', 'test-results'}
 markdown_paths = []
 for directory, directories, files in os.walk(ROOT):
-    directories[:] = [name for name in directories if name not in ignored]
+    directories[:] = [name for name in directories if name not in ignored and not name.startswith(".next-e2e-")]
     markdown_paths.extend(Path(directory) / name for name in files if name.endswith('.md'))
 for path in markdown_paths:
     text = path.read_text()

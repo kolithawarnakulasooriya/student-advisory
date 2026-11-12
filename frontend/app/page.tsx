@@ -203,7 +203,7 @@ export default function Home() {
           </span>
           Student Advisory
         </Link>
-        <span className="release">Student onboarding / 0.3</span>
+        <span className="release">Cited advising / 0.4</span>
       </header>
       <div className="dev-banner">
         <span className="dot" aria-hidden="true" />
@@ -552,7 +552,7 @@ export default function Home() {
           <IntakeWorkspace key={`intake:${me.user_id}:${me.active_scope}:${me.grant_epoch}:${JSON.stringify(me.student_memberships)}`} me={me} refreshMe={refreshWorkflows} />
         )}
         <footer>
-          Student Advisory <span>Student onboarding and documents · Release 0.3</span>
+          Student Advisory <span>Evidence and advisor guidance · Release 0.4</span>
         </footer>
       </main>
     </div>
