@@ -12,7 +12,7 @@ For forms, display the exact revision, course list, evidence, signer order, and 
 
 Use semantic controls, keyboard access, focus management, useful validation, and screen-reader status announcements. Check 360/768/1280 px layouts. Test critical journeys with synthetic accounts for each role and cross-scope denial cases. Prefer behavior tests over snapshots of implementation details.
 
-Release 0.1 commands: npm ci; npm run lint; npm run typecheck; npm run test; npm run test:e2e. These scripts and package-lock.json now exist. Follow ../README.md. Run type generation/build before E2E, not concurrently; Next.js manages next-env.d.ts.
+Current local commands: npm ci; npm run lint; npm run typecheck; npm run test; npm run test:e2e. These scripts and package-lock.json now exist. Follow ../README.md. Run type generation/build before E2E, not concurrently; Next.js manages next-env.d.ts.
 
 <!-- BEGIN:nextjs-agent-rules -->
 
@@ -23,3 +23,11 @@ This version has breaking changes — APIs, conventions, and file structure may 
 This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
 <!-- END:nextjs-agent-rules -->
+
+
+Release 0.2 staff screens use the generated OpenAPI client through lib/staff-api.ts. Keep invitation fragments only in memory, remove them from browser history, and preserve them through local registration/verification. Clear scope/identity/permission-epoch state and keep secretary enrollment projections separate from student summaries. Auth failure must reset registration mode and finish the loading state so existing users can sign in again.
+
+T061 uses organization-workspace.tsx and independent /me administration capabilities; it must work without a department membership. Scope selectors and organization grants never imply student-record or appointment authority. Refresh identity/metadata epochs after changes and clear stale edit state on conflict.
+
+
+Release 0.3 uses intake-workspace.tsx with profile, schema and source workspaces. Use the generated client, clear student-specific state on scope/identity/epoch changes, preserve review-before-completion and catalog confirmation, and keep students read-only for document intake. Extracted text is plain text. Isolated browser runs may set ADVISORY_E2E_API_PORT and ADVISORY_E2E_WEB_PORT without replacing an operator's existing servers.

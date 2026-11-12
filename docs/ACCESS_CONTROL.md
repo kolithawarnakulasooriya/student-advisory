@@ -27,3 +27,12 @@ Test every sensitive route as an anonymous user, pending user, suspended user, w
 
 ## Audit
 Record actor, action, object ID/type, scope, allow/deny result, reason, timestamp, and correlation ID. Do not record full prompts or transcripts in audit events. Restrict audit writing to append operations, restrict reads separately, and send durable copies to an institution-approved retention target. Hashing records alone does not create a tamper-proof audit system. Alert on repeated denied access and high-volume exports.
+
+## Organization administration
+
+T061 introduces separate explicit institution/college metadata-management grants. Check resource institution and root for every create, edit, enrollment, archive, restore and history action. These grants never expand operational scopes, student access, staff appointment or general audit. Only super admins delegate; account suspension suspends these grants and reactivation requires explicit restoration. See [organization contract](decisions/organization-contract.md).
+
+
+## Release 0.3 academic intake
+
+Profiles, schemas, immutable source versions, extraction artifacts and jobs use forced RLS under non-owner runtime roles. profile.configure, source.read and source.manage are explicit scoped platform capabilities; managers receive their operational scope only. Organization metadata grants and secretary delegation do not imply these capabilities. Students cannot upload in MVP. Profile facts can be edited only by their student owner; assigned advisors append separate review records. Private documents require the student membership ID. Worker access uses an explicit leased job and captured current actor/relationship epochs; final output commit is serialized with reassignment/revocation. See [intake contract](decisions/intake-contract.md).

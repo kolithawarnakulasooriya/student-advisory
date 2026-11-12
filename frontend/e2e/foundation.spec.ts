@@ -60,12 +60,33 @@ test("new account verifies without receiving a role", async ({ page }) => {
     (await (await page.request.get("/api/v1/me")).json()).active_grants,
   ).toEqual([]);
 });
-test("pending and unverified identities recover", async ({ page }) => {
+test("predefined identities reflect current membership state and recover", async ({
+  page,
+}) => {
   await signIn(page, "pending");
+  // Operator walkthroughs can approve this persistent development fixture.
+  // Deterministic pending-state denial remains covered in isolated DB/component tests.
   await expect(
-    page.getByText("Pending approval", { exact: true }),
+    page.getByRole("button", { name: "Sign out", exact: true }),
   ).toBeVisible();
+  const pending = await (await page.request.get("/api/v1/me")).json();
+  if (pending.membership_state === "pending") {
+    await expect(
+      page.getByText("Pending approval", { exact: true }),
+    ).toBeVisible();
+  } else if (pending.membership_state === "active") {
+    await expect(
+      page.getByRole("heading", { name: "Student workspace", exact: true }),
+    ).toBeVisible();
+  } else {
+    await expect(
+      page.getByText("Awaiting membership", { exact: true }),
+    ).toBeVisible();
+  }
   await page.getByRole("button", { name: "Sign out" }).click();
+  await expect(
+    page.getByRole("button", { name: "Sign in", exact: true }),
+  ).toBeVisible();
   await signIn(page, "unverified");
   await expect(
     page.getByRole("heading", { name: "Verify your synthetic email" }),

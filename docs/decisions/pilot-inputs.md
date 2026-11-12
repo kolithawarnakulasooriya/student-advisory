@@ -1,6 +1,6 @@
 # Pilot dependency register — T004
 
-These inputs remain unresolved. Owners below identify required institutional functions, not appointed people or claimed approvals. None blocks synthetic Release 0.1.
+These inputs remain unresolved. Owners below identify required institutional functions, not appointed people or claimed approvals. None blocks the synthetic local Release 0.1–0.2 scope.
 
 | Decision | Required owner | Blocks |
 | --- | --- | --- |

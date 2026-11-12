@@ -4,11 +4,13 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+# Organization grant projections are declared here to keep /me independent of route modules.
+
 Role = Literal["student", "advisor", "secretary", "manager", "platform_admin", "super_admin"]
 
 
 class Input(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
 
 class EmailInput(Input):
@@ -63,6 +65,26 @@ class ScopeOut(BaseModel):
     timezone: str
 
 
+class PlatformInfo(BaseModel):
+    id: UUID
+    status: str
+    version: int
+
+
+class StudentMembershipInfo(BaseModel):
+    id: UUID
+    grant_id: UUID
+    relationship_epoch: int
+
+
+class OrganizationGrantInfo(BaseModel):
+    id: UUID
+    institution_id: UUID
+    scope_kind: str
+    root_org_unit_id: UUID | None
+    valid_until: datetime | None
+
+
 class MeOut(BaseModel):
     user_id: UUID
     email: str
@@ -79,6 +101,11 @@ class MeOut(BaseModel):
     capabilities: list[str]
     scopes: list[ScopeOut]
     expires_at: datetime
+    administration_capabilities: list[str] = []
+    organization_grants: list[OrganizationGrantInfo] = []
+    organization_epochs: dict[str, int] = {}
+    platform_grants: list[PlatformInfo] = []
+    student_memberships: list[StudentMembershipInfo] = []
     identity_mode: Literal["synthetic"] = "synthetic"
 
 

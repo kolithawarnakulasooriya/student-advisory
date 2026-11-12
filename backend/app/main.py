@@ -16,18 +16,23 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from app.config import Settings
 from app.db import context, make_engine, transaction
 from app.identity import MockIdentityProvider
-from app.models import LoginSession, OrgUnit, User, Verification
+from app.models import Institution, LoginSession, OrgUnit, StudentMembership, User, Verification
+from app.organizations import router as organization_router
+from app.profiles import router as profile_router
 from app.schemas import (
     CsrfOut,
     EmailInput,
     ErrorOut,
     GrantOut,
     MeOut,
+    OrganizationGrantInfo,
+    PlatformInfo,
     RegisterInput,
     RegistrationOut,
     Role,
     ScopeOut,
     StatusOut,
+    StudentMembershipInfo,
     VerifyInput,
 )
 from app.security import (
@@ -43,6 +48,11 @@ from app.security import (
     scoped_orgs,
     session_for,
 )
+from app.sources import router as source_router
+from app.staff_routes import router as staff_router
+from app.staff_schemas import Purpose
+from app.staff_security import own_scope_capabilities
+from app.upload_limit import UploadLimit
 
 logger = logging.getLogger("advisory")
 
@@ -51,7 +61,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     cfg = settings or Settings()
     app = FastAPI(
         title="Student Advisory Foundation",
-        version="0.1.0",
+        version="0.3.0",
         responses={
             401: {"model": ErrorOut},
             403: {"model": ErrorOut},
@@ -61,6 +71,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             503: {"model": ErrorOut},
         },
     )
+    app.add_middleware(UploadLimit, maximum=cfg.max_upload_bytes + 65536)
     app.state.settings = cfg
     app.state.engine = make_engine(cfg.database_url.get_secret_value())
     app.state.auth_engine = make_engine(cfg.auth_database_url.get_secret_value())
@@ -203,10 +214,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                             "WHERE n.nspname='public' AND c.relrowsecurity "
                             "AND c.relforcerowsecurity "
                             "AND c.relname IN ('users','sessions','verifications','role_grants',"
-                            "'institutions','org_units')"
+                            "'institutions','org_units','platform_grants','platform_control',"
+                            "'enrollment_options','student_memberships','advisor_assignments',"
+                            "'membership_requests','invitations','audit_events','idempotency_records',"
+                            "'outbox_events','operational_reasons','organization_admin_grants')"
                         )
                     )
-                    if protected_tables != 6:
+                    if protected_tables != 18:
                         raise ApiError(503, "NOT_READY", "Database is not ready.")
         except OperationalError:
             raise ApiError(503, "NOT_READY", "Database is not ready.") from None
@@ -323,13 +337,33 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         )
 
     @app.get("/api/v1/me", response_model=MeOut)
-    def me(request: Request, auth: AuthDB, db: AppDB, scope_id: UUID | None = None) -> MeOut:
+    def me(
+        request: Request,
+        auth: AuthDB,
+        db: AppDB,
+        scope_id: UUID | None = None,
+        purpose: Purpose | None = None,
+    ) -> MeOut:
         session = signed_session(request, auth)
+        context(db, purpose=purpose or "")
         actor = load_actor(db, session.user_id, session.mfa)
         scopes = scoped_orgs(db, actor)
         if scope_id and scope_id not in actor.allowed_scopes:
             raise ApiError(404, "NOT_FOUND", "Resource not found.")
-        selected = scope_id or (scopes[0].id if scopes else None)
+        preferred = next(
+            (
+                o.id
+                for o in scopes
+                if o.kind == "department" and any(g.org_unit_id == o.id for g in actor.active)
+            ),
+            None,
+        )
+        selected = (
+            scope_id
+            or preferred
+            or next((o.id for o in scopes if o.kind == "department"), None)
+            or (scopes[0].id if scopes else None)
+        )
         grants = [
             GrantOut(
                 id=g.id,
@@ -342,7 +376,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         ]
         membership = (
             "active"
-            if actor.active
+            if actor.active or actor.platform_grants
             else (
                 "pending"
                 if any(g.status == "pending" for g in actor.grants)
@@ -365,7 +399,39 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             active_scope=selected,
             memberships=grants,
             active_grants=[g for g in grants if any(a.id == g.id for a in actor.active)],
-            capabilities=["org.read", "workspace.view"] if scopes else [],
+            capabilities=(["org.read", "workspace.view"] + own_scope_capabilities(db, selected))
+            if scopes
+            else [],
+            administration_capabilities=(
+                ["organization.manage"]
+                if session.mfa and (actor.platform_grants or actor.organization_grants)
+                else []
+            ),
+            organization_grants=[
+                OrganizationGrantInfo(
+                    id=g.id,
+                    institution_id=g.institution_id,
+                    scope_kind=g.scope_kind,
+                    root_org_unit_id=g.root_org_unit_id,
+                    valid_until=g.valid_until,
+                )
+                for g in actor.organization_grants
+            ],
+            organization_epochs={
+                str(i.id): i.organization_epoch for i in db.scalars(select(Institution))
+            },
+            platform_grants=[
+                PlatformInfo(id=g.id, status=g.status, version=g.version)
+                for g in actor.platform_grants
+            ],
+            student_memberships=[
+                StudentMembershipInfo(
+                    id=m.id, grant_id=m.grant_id, relationship_epoch=m.relationship_epoch
+                )
+                for m in db.scalars(
+                    select(StudentMembership).where(StudentMembership.user_id == actor.user.id)
+                )
+            ],
             scopes=[scope_out(o) for o in scopes],
             expires_at=session.expires_at,
         )
@@ -389,4 +455,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         assert org is not None
         return scope_out(org)
 
+    app.include_router(staff_router)
+    app.include_router(organization_router)
+    app.include_router(profile_router)
+    app.include_router(source_router)
     return app

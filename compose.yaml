@@ -15,5 +15,23 @@ services:
       interval: 2s
       timeout: 3s
       retries: 30
+  mailpit:
+    image: axllent/mailpit@sha256:aef2aacc11f075ec0fb6874275ee4a421e688e11a96ebb296134d1735c7761ce
+    ports:
+      - "127.0.0.1:1025:1025"
+      - "127.0.0.1:8025:8025"
+    environment:
+      MP_MAX_MESSAGES: 1000
+  scanner-update:
+    profiles: [intake-tools]
+    image: advisory-parser:0.3
+    build: ./infra/parser
+    user: "${LOCAL_UID:-10001}:${LOCAL_GID:-10001}"
+    entrypoint: [freshclam]
+    command: [--config-file=/signatures/freshclam.conf, --stdout]
+    volumes:
+      - ./local-data/clamav:/signatures
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
 volumes:
   advisory-dev:

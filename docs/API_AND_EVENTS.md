@@ -31,3 +31,8 @@ Events to implement: membership.requested, membership.decided, assignment.change
 
 ## Audit and errors
 Record successful and denied privileged actions. Use stable reason codes such as WRONG_SCOPE, RELATIONSHIP_REVOKED, STALE_REVISION, SOURCE_NOT_APPLICABLE, NO_SUPPORTING_EVIDENCE, and SIGNATURE_STEP_NOT_ALLOWED. Return a generic inaccessible-record response where exposing object existence is inappropriate. Never echo database errors, source text, credentials, or model stack traces to users.
+
+
+## Release 0.3 intake APIs
+
+Implemented profile/schema/source routes are represented in the generated OpenAPI contract. `mid` always denotes a student membership ID. Profile/schema GETs expose ETags; transitions require If-Match and idempotency keys. Multipart uploads use a `target` JSON part matching SourceTarget and a `file` part. A new source uses If-Match `"0"`; replacements supply source_id and its current version. Metadata edits append versions without changing scope. File downloads require successful clean processing and current access. `/profile/context?context=...` compares a captured token without returning academic facts. See [the intake contract](decisions/intake-contract.md) for the metadata-only profile.changed event and future consumer obligations.

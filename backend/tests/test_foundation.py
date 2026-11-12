@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 from app.config import Settings
 from app.db import context, make_engine
 from app.identity import MockIdentityProvider
-from app.models import LoginSession, OrgUnit, RoleGrant, User, Verification
+from app.models import AdvisorAssignment, LoginSession, OrgUnit, RoleGrant, User, Verification
 from app.security import ApiError, digest, now, require_recent
 from app.seed import disposable_url, fixture_id, seed
 from tests.conftest import login, post
@@ -314,6 +314,25 @@ def test_seed_is_idempotent(seeded: Engine) -> None:
         before = len(list(db.scalars(select(User))))
         seed(db)
         assert len(list(db.scalars(select(User)))) == before
+        assignment = db.scalar(
+            select(AdvisorAssignment).where(
+                AdvisorAssignment.student_membership_id
+                == fixture_id("grant:student-a:department-a"),
+                AdvisorAssignment.ended_at.is_(None),
+            )
+        )
+        assert assignment is not None
+        assignment.ended_at = now()
+        db.flush()
+        count = len(list(db.scalars(select(AdvisorAssignment))))
+        seed(db)
+        assert len(list(db.scalars(select(AdvisorAssignment)))) == count
+        assert not db.scalar(
+            select(AdvisorAssignment).where(
+                AdvisorAssignment.student_membership_id == assignment.student_membership_id,
+                AdvisorAssignment.ended_at.is_(None),
+            )
+        )
 
 
 @pytest.mark.parametrize(

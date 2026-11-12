@@ -1,7 +1,7 @@
 import hashlib
 import hmac
 import secrets
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 
 from app.config import Settings
 from app.db import context
-from app.models import LoginSession, OrgUnit, RoleGrant, User
+from app.models import LoginSession, OrganizationAdminGrant, OrgUnit, PlatformGrant, RoleGrant, User
 
 COOKIE = "advisory_session"
 
@@ -102,6 +102,9 @@ class AuthContext:
     user: User
     grants: list[RoleGrant]
     mfa: bool
+    platform_grants: list[PlatformGrant] = field(default_factory=list)
+    platform_scopes: set[UUID] = field(default_factory=set)
+    organization_grants: list[OrganizationAdminGrant] = field(default_factory=list)
 
     @property
     def active(self) -> list[RoleGrant]:
@@ -115,13 +118,17 @@ class AuthContext:
 
     @property
     def mfa_required(self) -> bool:
-        return not self.mfa and any(g.role != "student" for g in self.active)
+        return not self.mfa and (
+            bool(self.platform_grants)
+            or bool(self.organization_grants)
+            or any(g.role != "student" for g in self.active)
+        )
 
     @property
     def allowed_scopes(self) -> set[UUID]:
         if self.mfa_required:
             return set()
-        return {g.org_unit_id for g in self.active}
+        return {g.org_unit_id for g in self.active} | self.platform_scopes
 
 
 def load_actor(db: Session, user_id: UUID | None, mfa: bool) -> AuthContext:
@@ -132,7 +139,29 @@ def load_actor(db: Session, user_id: UUID | None, mfa: bool) -> AuthContext:
     if user is None or user.status != "active":
         raise ApiError(401, "ACCOUNT_UNAVAILABLE", "This account is unavailable.")
     grants = list(db.scalars(select(RoleGrant).where(RoleGrant.user_id == user_id)))
-    return AuthContext(user, grants, mfa)
+    pgs = list(
+        db.scalars(
+            select(PlatformGrant).where(
+                PlatformGrant.user_id == user_id, PlatformGrant.status == "active"
+            )
+        )
+    )
+    extra = set(db.scalars(select(OrgUnit.id))) if pgs and mfa else set()
+    ogs = (
+        list(
+            db.scalars(
+                select(OrganizationAdminGrant).where(
+                    OrganizationAdminGrant.user_id == user_id,
+                    OrganizationAdminGrant.status == "active",
+                    (OrganizationAdminGrant.valid_until.is_(None))
+                    | (OrganizationAdminGrant.valid_until > now()),
+                )
+            )
+        )
+        if user.verified
+        else []
+    )
+    return AuthContext(user, grants, mfa, pgs, extra, ogs)
 
 
 def authorize(actor: AuthContext, action: str, resource: OrgUnit | None) -> None:
@@ -140,9 +169,12 @@ def authorize(actor: AuthContext, action: str, resource: OrgUnit | None) -> None
         action != "org.read"
         or resource is None
         or resource.id not in actor.allowed_scopes
-        or not any(
-            g.org_unit_id == resource.id and g.institution_id == resource.institution_id
-            for g in actor.active
+        or (
+            not actor.platform_grants
+            and not any(
+                g.org_unit_id == resource.id and g.institution_id == resource.institution_id
+                for g in actor.active
+            )
         )
     ):
         raise ApiError(404, "NOT_FOUND", "Resource not found.")

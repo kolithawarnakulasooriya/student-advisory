@@ -335,3 +335,155 @@ li {
     font-size: 32px;
   }
 }
+.operations {
+  margin-top: 40px;
+  border-top: 1px solid var(--line);
+  padding-top: 32px;
+}
+.section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.workflow-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 24px 0;
+}
+.workflow-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--line);
+  padding: 20px 0;
+  overflow-wrap: anywhere;
+}
+.workflow-row h3 {
+  margin: 0;
+  font-size: 17px;
+}
+.workflow-row p {
+  margin: 8px 0;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: flex-start;
+  max-width: 100%;
+  min-width: 0;
+}
+.actions details {
+  width: 100%;
+  max-width: 500px;
+}
+.operations textarea {
+  display: block;
+  width: 100%;
+  font: inherit;
+  color: var(--ink);
+  padding: 12px;
+  min-height: 84px;
+  border: 1px solid #9fb6b0;
+  border-radius: 6px;
+  margin-top: 8px;
+  resize: vertical;
+}
+.operations textarea:focus-visible,
+summary:focus-visible {
+  outline: 3px solid #a86c16;
+  outline-offset: 4px;
+}
+.operations .card {
+  margin: 20px 0;
+}
+summary {
+  cursor: pointer;
+  min-height: 32px;
+  font-weight: 600;
+}
+.check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  overflow-wrap: anywhere;
+}
+.check input {
+  width: 18px;
+  min-height: 18px;
+  margin: 0;
+  flex-shrink: 0;
+}
+fieldset {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 12px;
+  margin: 16px 0;
+  max-width: 100%;
+  min-width: 0;
+}
+.empty {
+  padding: 24px;
+  background: #eaf0e9;
+  border-radius: 8px;
+}
+.operations form {
+  max-width: 620px;
+}
+.operations details .card {
+  padding: 16px;
+}
+@media (max-width: 400px) {
+  .workflow-tabs button {
+    padding: 10px;
+  }
+  .workflow-row {
+    display: block;
+  }
+  .workflow-row .actions {
+    margin-top: 16px;
+  }
+  .section-title {
+    display: block;
+  }
+  .operations .actions button {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+  .operations {
+    margin-top: 24px;
+  }
+  .actions details {
+    width: 100%;
+  }
+}
+
+.organization-workspace { margin-top: 2.5rem; border-top: 1px solid var(--line, #ccd9d6); padding-top: 2rem; }
+.org-controls, .org-form { display: grid; gap: 1rem; margin: 1.5rem 0; }
+.org-grant { padding: 1rem 0; border-bottom: 1px solid #ccd9d6; overflow-wrap: anywhere; }
+.organization-workspace details.card > summary { cursor: pointer; font-weight: 700; }
+.organization-workspace article { overflow-wrap: anywhere; }
+.organization-workspace input, .organization-workspace select, .organization-workspace textarea { max-width: 100%; }
+@media (min-width: 768px) { .org-form { grid-template-columns: repeat(2, minmax(0, 1fr)); } .org-form .row-actions { grid-column: 1 / -1; } }
+.organization-workspace .row-actions { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+.organization-workspace .workflow-list article { padding: 1.25rem 0; border-bottom: 1px solid #ccd9d6; }
+.organization-workspace textarea { display: block; width: 100%; min-height: 6rem; padding: .8rem; margin-top: .5rem; border: 1px solid #9db7b1; border-radius: .4rem; background: #fff; color: inherit; font: inherit; resize: vertical; }
+.organization-workspace form { margin-top: 1rem; }
+.administration-nav { margin-top: 1.5rem; font-weight: 700; }
+
+.intake-workspace { margin-top: 2rem; min-width: 0; }
+.intake-workspace nav { display:flex; flex-wrap:wrap; gap:.6rem; margin:1rem 0; }
+.intake-workspace form, .academic-field { display:grid; gap:.8rem; margin:1rem 0; }
+.intake-workspace fieldset { min-width:0; border:1px solid #ccd5d2; border-radius:8px; padding:1rem; margin:.5rem 0; }
+.intake-workspace input:not([type=checkbox]), .intake-workspace textarea, .intake-workspace select { width:100%; max-width:100%; box-sizing:border-box; }
+.intake-workspace label { display:block; margin:.5rem 0; }
+.intake-workspace button { margin:.3rem; }
+.intake-workspace dd { margin:0 0 .7rem; overflow-wrap:anywhere; }
+.intake-workspace dt { font-weight:600; }
+.source-card { padding:1rem; border-bottom:1px solid #ccd5d2; overflow-wrap:anywhere; }
+.extracted-text { white-space:pre-wrap; overflow-wrap:anywhere; max-height:30rem; overflow:auto; }
