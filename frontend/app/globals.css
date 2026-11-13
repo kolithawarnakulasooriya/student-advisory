@@ -487,3 +487,34 @@ fieldset {
 .intake-workspace dt { font-weight:600; }
 .source-card { padding:1rem; border-bottom:1px solid #ccd5d2; overflow-wrap:anywhere; }
 .extracted-text { white-space:pre-wrap; overflow-wrap:anywhere; max-height:30rem; overflow:auto; }
+
+
+.chat-message,
+.advising-answer,
+.evidence-drawer {
+  border: 1px solid #ccd3dd;
+  border-radius: 0.5rem;
+  padding: 0.8rem;
+  margin-block: 0.8rem;
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+.advising-answer blockquote,
+.evidence-drawer blockquote {
+  margin: 0.75rem 0;
+  padding-inline-start: 0.8rem;
+  border-inline-start: 3px solid #536c8e;
+  white-space: pre-wrap;
+}
+.intake-workspace pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.intake-workspace code {
+  overflow-wrap: anywhere;
+}
+.intake-workspace nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}

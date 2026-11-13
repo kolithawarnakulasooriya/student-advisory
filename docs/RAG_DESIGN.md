@@ -47,3 +47,8 @@ The small evals/scenarios.jsonl file in this package defines behavioral seed cas
 
 ## Failure behavior
 If vLLM is unavailable, show a temporary failure and a human-help action; preserve the student's question. If retrieval has no support, ask for missing facts or escalate. If the database cannot verify permissions, fail closed. If evidence is withdrawn during generation, discard and recompute against the current release. Do not fall back to the model's general memory for institution-specific requirements.
+
+
+## Release 0.4 local implementation
+
+The synthetic local implementation follows [the advising contract](decisions/advising-contract.md): exact filtered SQL retrieval, pinned 768-dimensional Nomic embeddings, ONNX CPU reranking and quote-first Qwen evidence selection. See [observed release evidence](RELEASE_0_4.md), [model manifest](../infra/inference/models.lock.json) and the frozen evals/retrieval-v1.json fixture. The local -8 reranker admission floor and tiny fixture results are starting regression controls, not pilot benchmarks. vLLM has adapter contract coverage only; cloud deployment, production calibration and comprehensive academic validation remain pending.

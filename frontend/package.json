@@ -1,6 +1,6 @@
 {
   "name": "student-advisory-web",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "scripts": {
     "dev": "next dev --hostname 127.0.0.1",
@@ -20,7 +20,9 @@
     "next": "16.4.6",
     "openapi-fetch": "0.17.0",
     "react": "19.3.1",
-    "react-dom": "19.3.1"
+    "react-dom": "19.3.1",
+    "react-markdown": "10.1.0",
+    "rehype-sanitize": "6.0.0"
   },
   "devDependencies": {
     "@playwright/test": "1.65.0",

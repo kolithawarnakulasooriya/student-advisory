@@ -13,9 +13,11 @@ from sqlalchemy.exc import IntegrityError, OperationalError, SQLAlchemyError
 from sqlalchemy.orm import Session
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from app.chat_routes import router as chat_router
 from app.config import Settings
 from app.db import context, make_engine, transaction
 from app.identity import MockIdentityProvider
+from app.knowledge_routes import router as knowledge_router
 from app.models import Institution, LoginSession, OrgUnit, StudentMembership, User, Verification
 from app.organizations import router as organization_router
 from app.profiles import router as profile_router
@@ -61,7 +63,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     cfg = settings or Settings()
     app = FastAPI(
         title="Student Advisory Foundation",
-        version="0.3.0",
+        version="0.4.0",
         responses={
             401: {"model": ErrorOut},
             403: {"model": ErrorOut},
@@ -459,4 +461,6 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(organization_router)
     app.include_router(profile_router)
     app.include_router(source_router)
+    app.include_router(knowledge_router)
+    app.include_router(chat_router)
     return app

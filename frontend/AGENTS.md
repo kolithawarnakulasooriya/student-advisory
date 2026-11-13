@@ -31,3 +31,6 @@ T061 uses organization-workspace.tsx and independent /me administration capabili
 
 
 Release 0.3 uses intake-workspace.tsx with profile, schema and source workspaces. Use the generated client, clear student-specific state on scope/identity/epoch changes, preserve review-before-completion and catalog confirmation, and keep students read-only for document intake. Extracted text is plain text. Isolated browser runs may set ADVISORY_E2E_API_PORT and ADVISORY_E2E_WEB_PORT without replacing an operator's existing servers.
+
+
+Release 0.4 adds advising, published-evidence, publication, governance/rebuild and case workspaces. Render only validated server quotes with authorized evidence drawers; keep typed guidance, notes and private drafts separate. Disable conversation mutations until its current revision is loaded. Staff case queues rely on current server authority. Browser tests explicitly use the deterministic adapter; real Ollama acceptance is a separate backend gate. See docs/decisions/advising-contract.md.

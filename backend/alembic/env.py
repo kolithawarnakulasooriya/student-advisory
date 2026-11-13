@@ -4,6 +4,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
 
+import app.advising_models  # noqa: F401
 import app.intake_models  # noqa: F401
 from alembic import context
 from app.models import Base

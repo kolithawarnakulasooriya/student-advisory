@@ -225,6 +225,25 @@ BODIES.update(
 )
 
 
+VALUES.update({key: "" for key in ("guidance_id", "conversation_id", "message_id", "job_id", "draft_id", "case_id", "evidence_id", "build_id", "governance_id", "evaluation_id")})
+VALUES.update({key: "0" for key in ("knowledge_version", "publication_version", "conversation_version", "job_version", "case_version")})
+BODIES.update({
+    "ReviewSource": {"source_version_id":"{{source_version_id}}", "reason":"{{reason}}"},
+    "PublishSource": {"build_id":"{{build_id}}", "reason":"{{reason}}"},
+    "RebuildInput": {"institution_id":"{{institution_id}}", "build_ids":["{{build_id}}"], "reason":"{{reason}}"},
+    "GovernanceInput": {"institution_id":"{{institution_id}}", "org_unit_id":"{{scope_id}}", "kind":"preferences", "definition":{"terminology":{"advisor":"Academic advisor"},"clarification_fields":["program","catalog_year"],"style":"concise"}},
+    "ActivateInput": {"evaluation_id":"{{evaluation_id}}", "reason":"{{reason}}"},
+    "ConversationInput": {"student_membership_id":"{{student_membership_id}}", "title":"Synthetic Postman advising"},
+    "QuestionInput": {"type":"student_question", "text":"Which synthetic published requirement applies?"},
+    "GuidanceInput": {"type":"student_visible_guidance", "text":"Consider a three course term.", "preferences":{"max_courses":3}},
+    "NoteInput": {"type":"staff_only_note", "text":"Synthetic private note; never enters inference."},
+    "DraftInput": {"message_id":"{{message_id}}"},
+    "PublishDraft": {"reviewed":True, "text":"I reviewed this synthetic guidance."},
+    "CaseInput": {"student_membership_id":"{{student_membership_id}}", "conversation_id":"{{conversation_id}}", "reason":"{{reason}}"},
+    "CaseTransition": {"status":"in_progress", "text":"Synthetic human review started"},
+})
+
+
 def event(kind, code):
     return {
         "listen": kind,
@@ -238,7 +257,14 @@ def group(path):
     resource = path.removeprefix(PREFIX + "/").split("/")[0]
     return {
         "departments": "14 Onboarding schemas",
-        "sources": "16 Document intake",
+        "sources": "16 Document intake and publication",
+        "knowledge": "17 Knowledge rules and releases",
+        "conversations": "18 Conversations and advisor participation",
+        "jobs": "19 Validated generation jobs",
+        "citations": "20 Authorized evidence",
+        "advisor-drafts": "21 Private advisor drafts",
+        "cases": "22 Human help cases",
+        "guidance": "18 Conversations and advisor participation",
         "admin": "12 Organization administration",
         "organization-admin-grants": "13 Organization administration grants",
         "health": "01 Health",
@@ -260,6 +286,10 @@ def group(path):
 
 
 def path_variable(path, name):
+    if name == "gid" and "/guidance/" in path:
+        return "guidance_id"
+    if name == "gid" and "/knowledge/" in path:
+        return "governance_id"
     if name == "gid":
         return {
             "memberships": "membership_grant_id",
@@ -268,6 +298,8 @@ def path_variable(path, name):
             "organization-admin-grants": "organization_grant_id",
         }[path.split("/")[3]]
     return {
+        "cid": "conversation_id", "jid": "job_id", "did": "draft_id", "eid": "evidence_id",
+        "case_id": "case_id",
         "sid": "schema_id" if "/onboarding-schemas/" in path else "source_id",
         "vid": "source_version_id",
         "mid": "student_membership_id",
@@ -282,6 +314,18 @@ def path_variable(path, name):
 def revision(path, method):
     if method == "get":
         return None
+    if "/guidance/" in path:
+        return "conversation_version"
+    if "/knowledge/" in path:
+        return "job_version" if path.endswith("/evaluate") else "knowledge_version"
+    if "/jobs/" in path:
+        return "job_version"
+    if "/cases/" in path:
+        return "case_version"
+    if "/advisor-drafts/" in path or ("/conversations/" in path and not path.endswith("/notes")):
+        return "conversation_version"
+    if path.endswith(("/publish", "/withdraw")) and "/sources/" in path:
+        return "publication_version"
     if "/profile" in path:
         return "profile_version"
     if "/sources" in path:
@@ -316,13 +360,30 @@ def capture_scripts(path, method):
             f'if (data.{field} !== undefined && data.{field} !== null) pm.environment.set("{variable}", String(data.{field}));'
         )
 
+    if "/sources/" in path and path.endswith(("/publication", "/publish", "/withdraw")):
+        capture("version", "publication_version")
+    if path.endswith("/index"):
+        capture("id", "build_id")
+    if path == PREFIX + "/knowledge/state":
+        capture("version", "knowledge_version")
+    if path == PREFIX + "/knowledge/governance" and method == "post" or path.endswith("/activate"):
+        capture("id", "governance_id")
+        capture("evaluation_id", "evaluation_id")
+    if "/jobs/" in path or path.endswith("/evaluate"):
+        capture("id", "job_id"); capture("version", "job_version")
+    if path == PREFIX + "/conversations" and method == "post" or path == PREFIX + "/conversations/{cid}":
+        capture("id", "conversation_id"); capture("version", "conversation_version")
+    if path.endswith("/messages") and method == "post":
+        capture("id", "message_id")
+    if path == PREFIX + "/cases" and method == "post" or path == PREFIX + "/cases/{case_id}":
+        capture("id", "case_id"); capture("version", "case_version")
     if "/onboarding-schemas" in path:
         capture("version", "schema_version")
         capture("active_schema_id", "schema_id")
     if "/profile" in path and not path.endswith("/history"):
         capture("version", "profile_version")
         capture("context_version", "context")
-    if "/sources" in path and not path.endswith(
+    if "/sources" in path and not path.endswith(("/index", "/publish", "/withdraw", "/publication", "/indexed-excerpts")) and not path.endswith(
         ("/download", "/extraction", "/versions")
     ):
         capture("id", "source_id")

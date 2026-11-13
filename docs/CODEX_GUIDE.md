@@ -29,6 +29,14 @@ For authorization work, request the access-policy workflow. For RAG changes, use
 ## Completion evidence
 A change report names requirement IDs, migration/API effects, tests actually executed, evaluation results where relevant, and remaining risks. Never say deployed without observed deployment evidence. Never state that seed cases establish academic correctness. Do not show invented passing output for tools unavailable in the environment.
 
+## Commit updated files
+
+The root [AGENTS.md](../AGENTS.md) makes the [commit-steward persona](../.codex/personas/commit-steward.md) the default completion step for repository changes. After a coherent task is finished and relevant checks pass, the active agent creates a local task-scoped commit and reports its hash. The user can override this default by requesting uncommitted changes. Record the initial Git/index state, preserve unrelated work, and retain normal commit hooks. Read-only and planning tasks do not create commits; pushes and history rewrites need their own user instruction.
+
+For a manual handoff, use: “Read .codex/personas/commit-steward.md and commit only this task's verified updates. Preserve unrelated edits and staged work; report the hash and checks.”
+
+This is an instruction-driven completion workflow, not a continuously running file-save service. Persona Markdown remains a repository convention. The recognized instruction entry point is AGENTS.md; see the [official OpenAI documentation](https://learn.chatgpt.com/docs/agent-configuration/agents-md).
+
 ## Package integrity command
 ```bash
 python3 -m pip install -r scripts/requirements-tooling.txt

@@ -17,7 +17,7 @@ export default defineConfig({
       command: `../backend/.venv/bin/uvicorn app.main:create_app --factory --host 127.0.0.1 --port ${apiPort} --no-access-log`,
       cwd: "../backend",
       url: `http://127.0.0.1:${apiPort}/api/v1/health/ready`,
-      env: { WEB_ORIGIN: webOrigin },
+      env: { WEB_ORIGIN: webOrigin, INFERENCE_PROVIDER: process.env.INFERENCE_PROVIDER ?? "mock" },
       reuseExistingServer: !process.env.CI,
     },
     {

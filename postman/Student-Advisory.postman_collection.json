@@ -1,9 +1,9 @@
 {
   "info": {
     "_postman_id": "70162eaa-7d57-4a23-a9e4-1d946ac1d716",
-    "name": "Student Advisory Backend — Release 0.3.0",
+    "name": "Student Advisory Backend — Release 0.4.0",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "description": "All 69 current backend operations, generated from backend/contracts/openapi.json. Import the local environment and read postman/README.md. Run only 00 Smoke for a sequential check; the reference folders require deliberate role, target and revision selection. Cookie sessions; no bearer tokens. Synthetic local data only. CSRF is fetched before mutations and tokens stay in the cookie jar or request-local variables. No operator/bootstrap, Mailpit-internal, future academic, or cloud APIs are invented."
+    "description": "All 102 current backend operations, generated from backend/contracts/openapi.json. Import the local environment and read postman/README.md. Run only 00 Smoke for a sequential check; the reference folders require deliberate role, target and revision selection. Cookie sessions; no bearer tokens. Synthetic local data only. CSRF is fetched before mutations and tokens stay in the cookie jar or request-local variables. No operator/bootstrap, Mailpit-internal, future academic, or cloud APIs are invented."
   },
   "auth": {
     "type": "noauth"
@@ -2306,6 +2306,64 @@
             }
           ],
           "response": []
+        },
+        {
+          "name": "GET /students/{mid}/published-sources — Published Sources",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/students/{{student_membership_id}}/published-sources?purpose={{purpose}}&limit={{limit}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "students",
+                "{{student_membership_id}}",
+                "published-sources"
+              ],
+              "query": [
+                {
+                  "key": "purpose",
+                  "value": "{{purpose}}",
+                  "disabled": false
+                },
+                {
+                  "key": "limit",
+                  "value": "{{limit}}",
+                  "disabled": false
+                },
+                {
+                  "key": "cursor",
+                  "value": "{{cursor}}",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "GET /api/v1/students/{mid}/published-sources. Generated from OpenAPI published_sources_api_v1_students__mid__published_sources_get.\n\nEnable cursor and paste this response's next_cursor for the next page; retain actor, scope, purpose, email filter and limit. A changed binding returns 409."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected HTTP 200\", () => pm.response.to.have.status(200));",
+                  "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                  "const data = pm.response.json();",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
         }
       ]
     },
@@ -4010,6 +4068,8 @@
                   "pm.test(\"Expected HTTP 200\", () => pm.response.to.have.status(200));",
                   "if (pm.response.code >= 200 && pm.response.code < 300) {",
                   "const data = pm.response.json();",
+                  "if (data.id !== undefined && data.id !== null) pm.environment.set(\"governance_id\", String(data.id));",
+                  "if (data.evaluation_id !== undefined && data.evaluation_id !== null) pm.environment.set(\"evaluation_id\", String(data.evaluation_id));",
                   "if (data.version !== undefined && data.version !== null) pm.environment.set(\"schema_version\", String(data.version));",
                   "if (data.active_schema_id !== undefined && data.active_schema_id !== null) pm.environment.set(\"schema_id\", String(data.active_schema_id));",
                   "}"
@@ -4358,7 +4418,7 @@
       ]
     },
     {
-      "name": "16 Document intake",
+      "name": "16 Document intake and publication",
       "description": "API reference: send individual requests with the appropriate role, target, current revision and prerequisites. This folder is not a sequential scenario.",
       "item": [
         {
@@ -4717,6 +4777,145 @@
           "response": []
         },
         {
+          "name": "POST /sources/{sid}/index — Index",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Origin",
+                "value": "{{web_origin}}"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrf_token}}"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{operation_key}}"
+              },
+              {
+                "key": "If-Match",
+                "value": "\"{{source_version}}\""
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/sources/{{source_id}}/index",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sources",
+                "{{source_id}}",
+                "index"
+              ],
+              "query": []
+            },
+            "description": "POST /api/v1/sources/{sid}/index. Generated from OpenAPI index_api_v1_sources__sid__index_post.\n\nRequires current authority, simulated staff MFA where applicable, and recent authentication. Each send uses a new idempotency key; set idempotency_key to retry the same logical operation.\n\nRequires a fresh source_version; stale revisions return 409.\n\nBody schema: ReviewSource. Edit the example for your intended role/action; server authorization always applies.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"source_version_id\": \"{{source_version_id}}\",\n  \"reason\": \"{{reason}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^\\d+$/.test(String(pm.variables.get(\"source_version\") || \"\"))) { pm.execution.skipRequest(); throw new Error(\"Read the current resource and set source_version before this mutation.\"); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected HTTP 201\", () => pm.response.to.have.status(201));",
+                  "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                  "const data = pm.response.json();",
+                  "if (data.id !== undefined && data.id !== null) pm.environment.set(\"build_id\", String(data.id));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "GET /sources/{sid}/indexed-excerpts — Indexed Excerpts",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/sources/{{source_id}}/indexed-excerpts?purpose={{purpose}}&limit={{limit}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sources",
+                "{{source_id}}",
+                "indexed-excerpts"
+              ],
+              "query": [
+                {
+                  "key": "purpose",
+                  "value": "{{purpose}}",
+                  "disabled": false
+                },
+                {
+                  "key": "limit",
+                  "value": "{{limit}}",
+                  "disabled": false
+                },
+                {
+                  "key": "cursor",
+                  "value": "{{cursor}}",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "GET /api/v1/sources/{sid}/indexed-excerpts. Generated from OpenAPI indexed_excerpts_api_v1_sources__sid__indexed_excerpts_get.\n\nEnable cursor and paste this response's next_cursor for the next page; retain actor, scope, purpose, email filter and limit. A changed binding returns 409."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected HTTP 200\", () => pm.response.to.have.status(200));",
+                  "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                  "const data = pm.response.json();",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
           "name": "PATCH /sources/{sid}/metadata — Source Metadata",
           "request": {
             "method": "PATCH",
@@ -4792,6 +4991,136 @@
                   "if (data.id !== undefined && data.id !== null) pm.environment.set(\"source_id\", String(data.id));",
                   "if (data.source_version_id !== undefined && data.source_version_id !== null) pm.environment.set(\"source_version_id\", String(data.source_version_id));",
                   "if (data.version !== undefined && data.version !== null) pm.environment.set(\"source_version\", String(data.version));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "GET /sources/{sid}/publication — Publication",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/sources/{{source_id}}/publication?purpose={{purpose}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sources",
+                "{{source_id}}",
+                "publication"
+              ],
+              "query": [
+                {
+                  "key": "purpose",
+                  "value": "{{purpose}}",
+                  "disabled": false
+                }
+              ]
+            },
+            "description": "GET /api/v1/sources/{sid}/publication. Generated from OpenAPI publication_api_v1_sources__sid__publication_get."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected HTTP 200\", () => pm.response.to.have.status(200));",
+                  "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                  "const data = pm.response.json();",
+                  "if (data.version !== undefined && data.version !== null) pm.environment.set(\"publication_version\", String(data.version));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "POST /sources/{sid}/publish — Publish",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Origin",
+                "value": "{{web_origin}}"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrf_token}}"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{operation_key}}"
+              },
+              {
+                "key": "If-Match",
+                "value": "\"{{publication_version}}\""
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/sources/{{source_id}}/publish",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sources",
+                "{{source_id}}",
+                "publish"
+              ],
+              "query": []
+            },
+            "description": "POST /api/v1/sources/{sid}/publish. Generated from OpenAPI publish_api_v1_sources__sid__publish_post.\n\nRequires current authority, simulated staff MFA where applicable, and recent authentication. Each send uses a new idempotency key; set idempotency_key to retry the same logical operation.\n\nRequires a fresh publication_version; stale revisions return 409.\n\nBody schema: PublishSource. Edit the example for your intended role/action; server authorization always applies.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"build_id\": \"{{build_id}}\",\n  \"reason\": \"{{reason}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^\\d+$/.test(String(pm.variables.get(\"publication_version\") || \"\"))) { pm.execution.skipRequest(); throw new Error(\"Read the current resource and set publication_version before this mutation.\"); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected HTTP 200\", () => pm.response.to.have.status(200));",
+                  "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                  "const data = pm.response.json();",
+                  "if (data.version !== undefined && data.version !== null) pm.environment.set(\"publication_version\", String(data.version));",
                   "}"
                 ]
               }
@@ -5010,6 +5339,1922 @@
               ]
             },
             "description": "GET /api/v1/sources/{sid}/versions/{vid}/extraction. Generated from OpenAPI extraction_api_v1_sources__sid__versions__vid__extraction_get."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected HTTP 200\", () => pm.response.to.have.status(200));",
+                  "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                  "const data = pm.response.json();",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "POST /sources/{sid}/withdraw — Withdraw",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Origin",
+                "value": "{{web_origin}}"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrf_token}}"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{operation_key}}"
+              },
+              {
+                "key": "If-Match",
+                "value": "\"{{publication_version}}\""
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/sources/{{source_id}}/withdraw",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "sources",
+                "{{source_id}}",
+                "withdraw"
+              ],
+              "query": []
+            },
+            "description": "POST /api/v1/sources/{sid}/withdraw. Generated from OpenAPI withdraw_api_v1_sources__sid__withdraw_post.\n\nRequires current authority, simulated staff MFA where applicable, and recent authentication. Each send uses a new idempotency key; set idempotency_key to retry the same logical operation.\n\nRequires a fresh publication_version; stale revisions return 409.\n\nBody schema: ReasonInput. Edit the example for your intended role/action; server authorization always applies.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"{{reason}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^\\d+$/.test(String(pm.variables.get(\"publication_version\") || \"\"))) { pm.execution.skipRequest(); throw new Error(\"Read the current resource and set publication_version before this mutation.\"); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected HTTP 200\", () => pm.response.to.have.status(200));",
+                  "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                  "const data = pm.response.json();",
+                  "if (data.version !== undefined && data.version !== null) pm.environment.set(\"publication_version\", String(data.version));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "17 Knowledge rules and releases",
+      "description": "API reference: send individual requests with the appropriate role, target, current revision and prerequisites. This folder is not a sequential scenario.",
+      "item": [
+        {
+          "name": "GET /knowledge/governance — List Governance",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/knowledge/governance?institution_id={{institution_id}}&purpose={{purpose}}&limit={{limit}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "knowledge",
+                "governance"
+              ],
+              "query": [
+                {
+                  "key": "institution_id",
+                  "value": "{{institution_id}}",
+                  "disabled": false
+                },
+                {
+                  "key": "scope_id",
+                  "value": "{{scope_id}}",
+                  "disabled": true
+                },
+                {
+                  "key": "purpose",
+                  "value": "{{purpose}}",
+                  "disabled": false
+                },
+                {
+                  "key": "limit",
+                  "value": "{{limit}}",
+                  "disabled": false
+                },
+                {
+                  "key": "cursor",
+                  "value": "{{cursor}}",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "GET /api/v1/knowledge/governance. Generated from OpenAPI list_governance_api_v1_knowledge_governance_get.\n\nEnable cursor and paste this response's next_cursor for the next page; retain actor, scope, purpose, email filter and limit. A changed binding returns 409."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected HTTP 200\", () => pm.response.to.have.status(200));",
+                  "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                  "const data = pm.response.json();",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "POST /knowledge/governance — Create Governance",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Origin",
+                "value": "{{web_origin}}"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrf_token}}"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{operation_key}}"
+              },
+              {
+                "key": "If-Match",
+                "value": "\"{{knowledge_version}}\""
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/knowledge/governance",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "knowledge",
+                "governance"
+              ],
+              "query": []
+            },
+            "description": "POST /api/v1/knowledge/governance. Generated from OpenAPI create_governance_api_v1_knowledge_governance_post.\n\nRequires current authority, simulated staff MFA where applicable, and recent authentication. Each send uses a new idempotency key; set idempotency_key to retry the same logical operation.\n\nRequires a fresh knowledge_version; stale revisions return 409.\n\nBody schema: GovernanceInput. Edit the example for your intended role/action; server authorization always applies.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"institution_id\": \"{{institution_id}}\",\n  \"org_unit_id\": \"{{scope_id}}\",\n  \"kind\": \"preferences\",\n  \"definition\": {\n    \"terminology\": {\n      \"advisor\": \"Academic advisor\"\n    },\n    \"clarification_fields\": [\n      \"program\",\n      \"catalog_year\"\n    ],\n    \"style\": \"concise\"\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^\\d+$/.test(String(pm.variables.get(\"knowledge_version\") || \"\"))) { pm.execution.skipRequest(); throw new Error(\"Read the current resource and set knowledge_version before this mutation.\"); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected HTTP 201\", () => pm.response.to.have.status(201));",
+                  "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                  "const data = pm.response.json();",
+                  "if (data.id !== undefined && data.id !== null) pm.environment.set(\"governance_id\", String(data.id));",
+                  "if (data.evaluation_id !== undefined && data.evaluation_id !== null) pm.environment.set(\"evaluation_id\", String(data.evaluation_id));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "POST /knowledge/governance/{gid}/activate — Activate Governance",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Origin",
+                "value": "{{web_origin}}"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrf_token}}"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{operation_key}}"
+              },
+              {
+                "key": "If-Match",
+                "value": "\"{{knowledge_version}}\""
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/knowledge/governance/{{governance_id}}/activate",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "knowledge",
+                "governance",
+                "{{governance_id}}",
+                "activate"
+              ],
+              "query": []
+            },
+            "description": "POST /api/v1/knowledge/governance/{gid}/activate. Generated from OpenAPI activate_governance_api_v1_knowledge_governance__gid__activate_post.\n\nRequires current authority, simulated staff MFA where applicable, and recent authentication. Each send uses a new idempotency key; set idempotency_key to retry the same logical operation.\n\nRequires a fresh knowledge_version; stale revisions return 409.\n\nBody schema: ActivateInput. Edit the example for your intended role/action; server authorization always applies.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"evaluation_id\": \"{{evaluation_id}}\",\n  \"reason\": \"{{reason}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^\\d+$/.test(String(pm.variables.get(\"knowledge_version\") || \"\"))) { pm.execution.skipRequest(); throw new Error(\"Read the current resource and set knowledge_version before this mutation.\"); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected HTTP 200\", () => pm.response.to.have.status(200));",
+                  "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                  "const data = pm.response.json();",
+                  "if (data.id !== undefined && data.id !== null) pm.environment.set(\"governance_id\", String(data.id));",
+                  "if (data.evaluation_id !== undefined && data.evaluation_id !== null) pm.environment.set(\"evaluation_id\", String(data.evaluation_id));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "POST /knowledge/governance/{gid}/evaluate — Evaluate Governance",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Origin",
+                "value": "{{web_origin}}"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrf_token}}"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{operation_key}}"
+              },
+              {
+                "key": "If-Match",
+                "value": "\"{{job_version}}\""
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/knowledge/governance/{{governance_id}}/evaluate",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "knowledge",
+                "governance",
+                "{{governance_id}}",
+                "evaluate"
+              ],
+              "query": []
+            },
+            "description": "POST /api/v1/knowledge/governance/{gid}/evaluate. Generated from OpenAPI evaluate_governance_api_v1_knowledge_governance__gid__evaluate_post.\n\nRequires current authority, simulated staff MFA where applicable, and recent authentication. Each send uses a new idempotency key; set idempotency_key to retry the same logical operation.\n\nRequires a fresh job_version; stale revisions return 409."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^\\d+$/.test(String(pm.variables.get(\"job_version\") || \"\"))) { pm.execution.skipRequest(); throw new Error(\"Read the current resource and set job_version before this mutation.\"); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected HTTP 201\", () => pm.response.to.have.status(201));",
+                  "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                  "const data = pm.response.json();",
+                  "if (data.id !== undefined && data.id !== null) pm.environment.set(\"job_id\", String(data.id));",
+                  "if (data.version !== undefined && data.version !== null) pm.environment.set(\"job_version\", String(data.version));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "POST /knowledge/rebuild/activate — Activate Rebuild",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Origin",
+                "value": "{{web_origin}}"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrf_token}}"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{operation_key}}"
+              },
+              {
+                "key": "If-Match",
+                "value": "\"{{knowledge_version}}\""
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/knowledge/rebuild/activate",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "knowledge",
+                "rebuild",
+                "activate"
+              ],
+              "query": []
+            },
+            "description": "POST /api/v1/knowledge/rebuild/activate. Generated from OpenAPI activate_rebuild_api_v1_knowledge_rebuild_activate_post.\n\nRequires current authority, simulated staff MFA where applicable, and recent authentication. Each send uses a new idempotency key; set idempotency_key to retry the same logical operation.\n\nRequires a fresh knowledge_version; stale revisions return 409.\n\nBody schema: RebuildInput. Edit the example for your intended role/action; server authorization always applies.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"institution_id\": \"{{institution_id}}\",\n  \"build_ids\": [\n    \"{{build_id}}\"\n  ],\n  \"reason\": \"{{reason}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^\\d+$/.test(String(pm.variables.get(\"knowledge_version\") || \"\"))) { pm.execution.skipRequest(); throw new Error(\"Read the current resource and set knowledge_version before this mutation.\"); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected HTTP 200\", () => pm.response.to.have.status(200));",
+                  "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                  "const data = pm.response.json();",
+                  "if (data.id !== undefined && data.id !== null) pm.environment.set(\"governance_id\", String(data.id));",
+                  "if (data.evaluation_id !== undefined && data.evaluation_id !== null) pm.environment.set(\"evaluation_id\", String(data.evaluation_id));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "GET /knowledge/state — Knowledge State",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/knowledge/state?institution_id={{institution_id}}&purpose={{purpose}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "knowledge",
+                "state"
+              ],
+              "query": [
+                {
+                  "key": "institution_id",
+                  "value": "{{institution_id}}",
+                  "disabled": false
+                },
+                {
+                  "key": "purpose",
+                  "value": "{{purpose}}",
+                  "disabled": false
+                }
+              ]
+            },
+            "description": "GET /api/v1/knowledge/state. Generated from OpenAPI knowledge_state_api_v1_knowledge_state_get."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected HTTP 200\", () => pm.response.to.have.status(200));",
+                  "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                  "const data = pm.response.json();",
+                  "if (data.version !== undefined && data.version !== null) pm.environment.set(\"knowledge_version\", String(data.version));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "18 Conversations and advisor participation",
+      "description": "API reference: send individual requests with the appropriate role, target, current revision and prerequisites. This folder is not a sequential scenario.",
+      "item": [
+        {
+          "name": "GET /conversations — Conversations",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/conversations?student_membership_id={{student_membership_id}}&limit={{limit}}&purpose={{purpose}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "conversations"
+              ],
+              "query": [
+                {
+                  "key": "student_membership_id",
+                  "value": "{{student_membership_id}}",
+                  "disabled": false
+                },
+                {
+                  "key": "limit",
+                  "value": "{{limit}}",
+                  "disabled": false
+                },
+                {
+                  "key": "cursor",
+                  "value": "{{cursor}}",
+                  "disabled": true
+                },
+                {
+                  "key": "purpose",
+                  "value": "{{purpose}}",
+                  "disabled": false
+                }
+              ]
+            },
+            "description": "GET /api/v1/conversations. Generated from OpenAPI conversations_api_v1_conversations_get.\n\nEnable cursor and paste this response's next_cursor for the next page; retain actor, scope, purpose, email filter and limit. A changed binding returns 409."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected HTTP 200\", () => pm.response.to.have.status(200));",
+                  "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                  "const data = pm.response.json();",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "POST /conversations — Create Conversation",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Origin",
+                "value": "{{web_origin}}"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrf_token}}"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{operation_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/conversations",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "conversations"
+              ],
+              "query": []
+            },
+            "description": "POST /api/v1/conversations. Generated from OpenAPI create_conversation_api_v1_conversations_post.\n\nRequires current authority, simulated staff MFA where applicable, and recent authentication. Each send uses a new idempotency key; set idempotency_key to retry the same logical operation.\n\nBody schema: ConversationInput. Edit the example for your intended role/action; server authorization always applies.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"student_membership_id\": \"{{student_membership_id}}\",\n  \"title\": \"Synthetic Postman advising\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected HTTP 201\", () => pm.response.to.have.status(201));",
+                  "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                  "const data = pm.response.json();",
+                  "if (data.id !== undefined && data.id !== null) pm.environment.set(\"conversation_id\", String(data.id));",
+                  "if (data.version !== undefined && data.version !== null) pm.environment.set(\"conversation_version\", String(data.version));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "GET /conversations/{cid} — Get Conversation",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/conversations/{{conversation_id}}?purpose={{purpose}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "conversations",
+                "{{conversation_id}}"
+              ],
+              "query": [
+                {
+                  "key": "purpose",
+                  "value": "{{purpose}}",
+                  "disabled": false
+                }
+              ]
+            },
+            "description": "GET /api/v1/conversations/{cid}. Generated from OpenAPI get_conversation_api_v1_conversations__cid__get."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected HTTP 200\", () => pm.response.to.have.status(200));",
+                  "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                  "const data = pm.response.json();",
+                  "if (data.id !== undefined && data.id !== null) pm.environment.set(\"conversation_id\", String(data.id));",
+                  "if (data.version !== undefined && data.version !== null) pm.environment.set(\"conversation_version\", String(data.version));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "GET /conversations/{cid}/advisor-drafts — Drafts",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/conversations/{{conversation_id}}/advisor-drafts?purpose={{purpose}}&limit={{limit}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "conversations",
+                "{{conversation_id}}",
+                "advisor-drafts"
+              ],
+              "query": [
+                {
+                  "key": "purpose",
+                  "value": "{{purpose}}",
+                  "disabled": false
+                },
+                {
+                  "key": "limit",
+                  "value": "{{limit}}",
+                  "disabled": false
+                },
+                {
+                  "key": "cursor",
+                  "value": "{{cursor}}",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "GET /api/v1/conversations/{cid}/advisor-drafts. Generated from OpenAPI drafts_api_v1_conversations__cid__advisor_drafts_get.\n\nEnable cursor and paste this response's next_cursor for the next page; retain actor, scope, purpose, email filter and limit. A changed binding returns 409."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected HTTP 200\", () => pm.response.to.have.status(200));",
+                  "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                  "const data = pm.response.json();",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "POST /conversations/{cid}/advisor-drafts — Draft",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Origin",
+                "value": "{{web_origin}}"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrf_token}}"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{operation_key}}"
+              },
+              {
+                "key": "If-Match",
+                "value": "\"{{conversation_version}}\""
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/conversations/{{conversation_id}}/advisor-drafts",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "conversations",
+                "{{conversation_id}}",
+                "advisor-drafts"
+              ],
+              "query": []
+            },
+            "description": "POST /api/v1/conversations/{cid}/advisor-drafts. Generated from OpenAPI draft_api_v1_conversations__cid__advisor_drafts_post.\n\nRequires current authority, simulated staff MFA where applicable, and recent authentication. Each send uses a new idempotency key; set idempotency_key to retry the same logical operation.\n\nRequires a fresh conversation_version; stale revisions return 409.\n\nBody schema: DraftInput. Edit the example for your intended role/action; server authorization always applies.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message_id\": \"{{message_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^\\d+$/.test(String(pm.variables.get(\"conversation_version\") || \"\"))) { pm.execution.skipRequest(); throw new Error(\"Read the current resource and set conversation_version before this mutation.\"); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected HTTP 201\", () => pm.response.to.have.status(201));",
+                  "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                  "const data = pm.response.json();",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "GET /conversations/{cid}/guidance — Guidance List",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/conversations/{{conversation_id}}/guidance?purpose={{purpose}}&limit={{limit}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "conversations",
+                "{{conversation_id}}",
+                "guidance"
+              ],
+              "query": [
+                {
+                  "key": "purpose",
+                  "value": "{{purpose}}",
+                  "disabled": false
+                },
+                {
+                  "key": "limit",
+                  "value": "{{limit}}",
+                  "disabled": false
+                },
+                {
+                  "key": "cursor",
+                  "value": "{{cursor}}",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "GET /api/v1/conversations/{cid}/guidance. Generated from OpenAPI guidance_list_api_v1_conversations__cid__guidance_get.\n\nEnable cursor and paste this response's next_cursor for the next page; retain actor, scope, purpose, email filter and limit. A changed binding returns 409."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected HTTP 200\", () => pm.response.to.have.status(200));",
+                  "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                  "const data = pm.response.json();",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "POST /conversations/{cid}/guidance — Add Guidance",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Origin",
+                "value": "{{web_origin}}"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrf_token}}"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{operation_key}}"
+              },
+              {
+                "key": "If-Match",
+                "value": "\"{{conversation_version}}\""
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/conversations/{{conversation_id}}/guidance",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "conversations",
+                "{{conversation_id}}",
+                "guidance"
+              ],
+              "query": []
+            },
+            "description": "POST /api/v1/conversations/{cid}/guidance. Generated from OpenAPI add_guidance_api_v1_conversations__cid__guidance_post.\n\nRequires current authority, simulated staff MFA where applicable, and recent authentication. Each send uses a new idempotency key; set idempotency_key to retry the same logical operation.\n\nRequires a fresh conversation_version; stale revisions return 409.\n\nBody schema: GuidanceInput. Edit the example for your intended role/action; server authorization always applies.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"student_visible_guidance\",\n  \"text\": \"Consider a three course term.\",\n  \"preferences\": {\n    \"max_courses\": 3\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^\\d+$/.test(String(pm.variables.get(\"conversation_version\") || \"\"))) { pm.execution.skipRequest(); throw new Error(\"Read the current resource and set conversation_version before this mutation.\"); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected HTTP 201\", () => pm.response.to.have.status(201));",
+                  "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                  "const data = pm.response.json();",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "GET /conversations/{cid}/messages — Messages",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/conversations/{{conversation_id}}/messages?purpose={{purpose}}&limit={{limit}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "conversations",
+                "{{conversation_id}}",
+                "messages"
+              ],
+              "query": [
+                {
+                  "key": "purpose",
+                  "value": "{{purpose}}",
+                  "disabled": false
+                },
+                {
+                  "key": "limit",
+                  "value": "{{limit}}",
+                  "disabled": false
+                },
+                {
+                  "key": "cursor",
+                  "value": "{{cursor}}",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "GET /api/v1/conversations/{cid}/messages. Generated from OpenAPI messages_api_v1_conversations__cid__messages_get.\n\nEnable cursor and paste this response's next_cursor for the next page; retain actor, scope, purpose, email filter and limit. A changed binding returns 409."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected HTTP 200\", () => pm.response.to.have.status(200));",
+                  "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                  "const data = pm.response.json();",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "POST /conversations/{cid}/messages — Question",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Origin",
+                "value": "{{web_origin}}"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrf_token}}"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{operation_key}}"
+              },
+              {
+                "key": "If-Match",
+                "value": "\"{{conversation_version}}\""
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/conversations/{{conversation_id}}/messages",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "conversations",
+                "{{conversation_id}}",
+                "messages"
+              ],
+              "query": []
+            },
+            "description": "POST /api/v1/conversations/{cid}/messages. Generated from OpenAPI question_api_v1_conversations__cid__messages_post.\n\nRequires current authority, simulated staff MFA where applicable, and recent authentication. Each send uses a new idempotency key; set idempotency_key to retry the same logical operation.\n\nRequires a fresh conversation_version; stale revisions return 409.\n\nBody schema: QuestionInput. Edit the example for your intended role/action; server authorization always applies.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"student_question\",\n  \"text\": \"Which synthetic published requirement applies?\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^\\d+$/.test(String(pm.variables.get(\"conversation_version\") || \"\"))) { pm.execution.skipRequest(); throw new Error(\"Read the current resource and set conversation_version before this mutation.\"); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected HTTP 201\", () => pm.response.to.have.status(201));",
+                  "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                  "const data = pm.response.json();",
+                  "if (data.id !== undefined && data.id !== null) pm.environment.set(\"message_id\", String(data.id));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "GET /conversations/{cid}/notes — Notes",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/conversations/{{conversation_id}}/notes?purpose={{purpose}}&limit={{limit}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "conversations",
+                "{{conversation_id}}",
+                "notes"
+              ],
+              "query": [
+                {
+                  "key": "purpose",
+                  "value": "{{purpose}}",
+                  "disabled": false
+                },
+                {
+                  "key": "limit",
+                  "value": "{{limit}}",
+                  "disabled": false
+                },
+                {
+                  "key": "cursor",
+                  "value": "{{cursor}}",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "GET /api/v1/conversations/{cid}/notes. Generated from OpenAPI notes_api_v1_conversations__cid__notes_get.\n\nEnable cursor and paste this response's next_cursor for the next page; retain actor, scope, purpose, email filter and limit. A changed binding returns 409."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected HTTP 200\", () => pm.response.to.have.status(200));",
+                  "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                  "const data = pm.response.json();",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "POST /conversations/{cid}/notes — Add Note",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Origin",
+                "value": "{{web_origin}}"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrf_token}}"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{operation_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/conversations/{{conversation_id}}/notes",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "conversations",
+                "{{conversation_id}}",
+                "notes"
+              ],
+              "query": []
+            },
+            "description": "POST /api/v1/conversations/{cid}/notes. Generated from OpenAPI add_note_api_v1_conversations__cid__notes_post.\n\nRequires current authority, simulated staff MFA where applicable, and recent authentication. Each send uses a new idempotency key; set idempotency_key to retry the same logical operation.\n\nBody schema: NoteInput. Edit the example for your intended role/action; server authorization always applies.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"staff_only_note\",\n  \"text\": \"Synthetic private note; never enters inference.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected HTTP 201\", () => pm.response.to.have.status(201));",
+                  "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                  "const data = pm.response.json();",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "POST /guidance/{gid}/supersede — Supersede",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Origin",
+                "value": "{{web_origin}}"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrf_token}}"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{operation_key}}"
+              },
+              {
+                "key": "If-Match",
+                "value": "\"{{conversation_version}}\""
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/guidance/{{guidance_id}}/supersede",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "guidance",
+                "{{guidance_id}}",
+                "supersede"
+              ],
+              "query": []
+            },
+            "description": "POST /api/v1/guidance/{gid}/supersede. Generated from OpenAPI supersede_api_v1_guidance__gid__supersede_post.\n\nRequires current authority, simulated staff MFA where applicable, and recent authentication. Each send uses a new idempotency key; set idempotency_key to retry the same logical operation.\n\nRequires a fresh conversation_version; stale revisions return 409.\n\nBody schema: GuidanceInput. Edit the example for your intended role/action; server authorization always applies.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"student_visible_guidance\",\n  \"text\": \"Consider a three course term.\",\n  \"preferences\": {\n    \"max_courses\": 3\n  }\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^\\d+$/.test(String(pm.variables.get(\"conversation_version\") || \"\"))) { pm.execution.skipRequest(); throw new Error(\"Read the current resource and set conversation_version before this mutation.\"); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected HTTP 201\", () => pm.response.to.have.status(201));",
+                  "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                  "const data = pm.response.json();",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "19 Validated generation jobs",
+      "description": "API reference: send individual requests with the appropriate role, target, current revision and prerequisites. This folder is not a sequential scenario.",
+      "item": [
+        {
+          "name": "GET /jobs/{jid} — Job",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/jobs/{{job_id}}?purpose={{purpose}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "jobs",
+                "{{job_id}}"
+              ],
+              "query": [
+                {
+                  "key": "purpose",
+                  "value": "{{purpose}}",
+                  "disabled": false
+                }
+              ]
+            },
+            "description": "GET /api/v1/jobs/{jid}. Generated from OpenAPI job_api_v1_jobs__jid__get."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected HTTP 200\", () => pm.response.to.have.status(200));",
+                  "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                  "const data = pm.response.json();",
+                  "if (data.id !== undefined && data.id !== null) pm.environment.set(\"job_id\", String(data.id));",
+                  "if (data.version !== undefined && data.version !== null) pm.environment.set(\"job_version\", String(data.version));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "POST /jobs/{jid}/retry — Retry",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Origin",
+                "value": "{{web_origin}}"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrf_token}}"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{operation_key}}"
+              },
+              {
+                "key": "If-Match",
+                "value": "\"{{job_version}}\""
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/jobs/{{job_id}}/retry",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "jobs",
+                "{{job_id}}",
+                "retry"
+              ],
+              "query": []
+            },
+            "description": "POST /api/v1/jobs/{jid}/retry. Generated from OpenAPI retry_api_v1_jobs__jid__retry_post.\n\nRequires current authority, simulated staff MFA where applicable, and recent authentication. Each send uses a new idempotency key; set idempotency_key to retry the same logical operation.\n\nRequires a fresh job_version; stale revisions return 409."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^\\d+$/.test(String(pm.variables.get(\"job_version\") || \"\"))) { pm.execution.skipRequest(); throw new Error(\"Read the current resource and set job_version before this mutation.\"); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected HTTP 201\", () => pm.response.to.have.status(201));",
+                  "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                  "const data = pm.response.json();",
+                  "if (data.id !== undefined && data.id !== null) pm.environment.set(\"job_id\", String(data.id));",
+                  "if (data.version !== undefined && data.version !== null) pm.environment.set(\"job_version\", String(data.version));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "20 Authorized evidence",
+      "description": "API reference: send individual requests with the appropriate role, target, current revision and prerequisites. This folder is not a sequential scenario.",
+      "item": [
+        {
+          "name": "GET /citations/{eid} — Citation",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/citations/{{evidence_id}}?purpose={{purpose}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "citations",
+                "{{evidence_id}}"
+              ],
+              "query": [
+                {
+                  "key": "purpose",
+                  "value": "{{purpose}}",
+                  "disabled": false
+                }
+              ]
+            },
+            "description": "GET /api/v1/citations/{eid}. Generated from OpenAPI citation_api_v1_citations__eid__get."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected HTTP 200\", () => pm.response.to.have.status(200));",
+                  "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                  "const data = pm.response.json();",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "21 Private advisor drafts",
+      "description": "API reference: send individual requests with the appropriate role, target, current revision and prerequisites. This folder is not a sequential scenario.",
+      "item": [
+        {
+          "name": "POST /advisor-drafts/{did}/publish — Publish Draft",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Origin",
+                "value": "{{web_origin}}"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrf_token}}"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{operation_key}}"
+              },
+              {
+                "key": "If-Match",
+                "value": "\"{{conversation_version}}\""
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/advisor-drafts/{{draft_id}}/publish",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "advisor-drafts",
+                "{{draft_id}}",
+                "publish"
+              ],
+              "query": []
+            },
+            "description": "POST /api/v1/advisor-drafts/{did}/publish. Generated from OpenAPI publish_draft_api_v1_advisor_drafts__did__publish_post.\n\nRequires current authority, simulated staff MFA where applicable, and recent authentication. Each send uses a new idempotency key; set idempotency_key to retry the same logical operation.\n\nRequires a fresh conversation_version; stale revisions return 409.\n\nBody schema: PublishDraft. Edit the example for your intended role/action; server authorization always applies.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reviewed\": true,\n  \"text\": \"I reviewed this synthetic guidance.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^\\d+$/.test(String(pm.variables.get(\"conversation_version\") || \"\"))) { pm.execution.skipRequest(); throw new Error(\"Read the current resource and set conversation_version before this mutation.\"); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected HTTP 201\", () => pm.response.to.have.status(201));",
+                  "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                  "const data = pm.response.json();",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "22 Human help cases",
+      "description": "API reference: send individual requests with the appropriate role, target, current revision and prerequisites. This folder is not a sequential scenario.",
+      "item": [
+        {
+          "name": "GET /cases — Cases",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/cases?scope_id={{scope_id}}&student_membership_id={{student_membership_id}}&purpose={{purpose}}&limit={{limit}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "cases"
+              ],
+              "query": [
+                {
+                  "key": "scope_id",
+                  "value": "{{scope_id}}",
+                  "disabled": false
+                },
+                {
+                  "key": "student_membership_id",
+                  "value": "{{student_membership_id}}",
+                  "disabled": false
+                },
+                {
+                  "key": "purpose",
+                  "value": "{{purpose}}",
+                  "disabled": false
+                },
+                {
+                  "key": "limit",
+                  "value": "{{limit}}",
+                  "disabled": false
+                },
+                {
+                  "key": "cursor",
+                  "value": "{{cursor}}",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "GET /api/v1/cases. Generated from OpenAPI cases_api_v1_cases_get.\n\nEnable cursor and paste this response's next_cursor for the next page; retain actor, scope, purpose, email filter and limit. A changed binding returns 409."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected HTTP 200\", () => pm.response.to.have.status(200));",
+                  "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                  "const data = pm.response.json();",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "POST /cases — Create Case",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Origin",
+                "value": "{{web_origin}}"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrf_token}}"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{operation_key}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/cases",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "cases"
+              ],
+              "query": []
+            },
+            "description": "POST /api/v1/cases. Generated from OpenAPI create_case_api_v1_cases_post.\n\nRequires current authority, simulated staff MFA where applicable, and recent authentication. Each send uses a new idempotency key; set idempotency_key to retry the same logical operation.\n\nBody schema: CaseInput. Edit the example for your intended role/action; server authorization always applies.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"student_membership_id\": \"{{student_membership_id}}\",\n  \"conversation_id\": \"{{conversation_id}}\",\n  \"reason\": \"{{reason}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected HTTP 201\", () => pm.response.to.have.status(201));",
+                  "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                  "const data = pm.response.json();",
+                  "if (data.id !== undefined && data.id !== null) pm.environment.set(\"case_id\", String(data.id));",
+                  "if (data.version !== undefined && data.version !== null) pm.environment.set(\"case_version\", String(data.version));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "GET /cases/{case_id} — Get Case",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/cases/{{case_id}}?purpose={{purpose}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "cases",
+                "{{case_id}}"
+              ],
+              "query": [
+                {
+                  "key": "purpose",
+                  "value": "{{purpose}}",
+                  "disabled": false
+                }
+              ]
+            },
+            "description": "GET /api/v1/cases/{case_id}. Generated from OpenAPI get_case_api_v1_cases__case_id__get."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected HTTP 200\", () => pm.response.to.have.status(200));",
+                  "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                  "const data = pm.response.json();",
+                  "if (data.id !== undefined && data.id !== null) pm.environment.set(\"case_id\", String(data.id));",
+                  "if (data.version !== undefined && data.version !== null) pm.environment.set(\"case_version\", String(data.version));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "PATCH /cases/{case_id} — Transition Case",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Origin",
+                "value": "{{web_origin}}"
+              },
+              {
+                "key": "X-CSRF-Token",
+                "value": "{{csrf_token}}"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{operation_key}}"
+              },
+              {
+                "key": "If-Match",
+                "value": "\"{{case_version}}\""
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/cases/{{case_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "cases",
+                "{{case_id}}"
+              ],
+              "query": []
+            },
+            "description": "PATCH /api/v1/cases/{case_id}. Generated from OpenAPI transition_case_api_v1_cases__case_id__patch.\n\nRequires current authority, simulated staff MFA where applicable, and recent authentication. Each send uses a new idempotency key; set idempotency_key to retry the same logical operation.\n\nRequires a fresh case_version; stale revisions return 409.\n\nBody schema: CaseTransition. Edit the example for your intended role/action; server authorization always applies.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"in_progress\",\n  \"text\": \"Synthetic human review started\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!/^\\d+$/.test(String(pm.variables.get(\"case_version\") || \"\"))) { pm.execution.skipRequest(); throw new Error(\"Read the current resource and set case_version before this mutation.\"); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Expected HTTP 200\", () => pm.response.to.have.status(200));",
+                  "if (pm.response.code >= 200 && pm.response.code < 300) {",
+                  "const data = pm.response.json();",
+                  "if (data.id !== undefined && data.id !== null) pm.environment.set(\"case_id\", String(data.id));",
+                  "if (data.version !== undefined && data.version !== null) pm.environment.set(\"case_version\", String(data.version));",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "GET /cases/{case_id}/history — Case History",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/v1/cases/{{case_id}}/history?purpose={{purpose}}&limit={{limit}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "cases",
+                "{{case_id}}",
+                "history"
+              ],
+              "query": [
+                {
+                  "key": "purpose",
+                  "value": "{{purpose}}",
+                  "disabled": false
+                },
+                {
+                  "key": "limit",
+                  "value": "{{limit}}",
+                  "disabled": false
+                },
+                {
+                  "key": "cursor",
+                  "value": "{{cursor}}",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "GET /api/v1/cases/{case_id}/history. Generated from OpenAPI case_history_api_v1_cases__case_id__history_get.\n\nEnable cursor and paste this response's next_cursor for the next page; retain actor, scope, purpose, email filter and limit. A changed binding returns 409."
           },
           "event": [
             {
@@ -5299,6 +7544,81 @@
     {
       "key": "idempotency_key",
       "value": "",
+      "type": "string"
+    },
+    {
+      "key": "guidance_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "conversation_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "message_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "job_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "draft_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "case_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "evidence_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "build_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "governance_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "evaluation_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "knowledge_version",
+      "value": "0",
+      "type": "string"
+    },
+    {
+      "key": "publication_version",
+      "value": "0",
+      "type": "string"
+    },
+    {
+      "key": "conversation_version",
+      "value": "0",
+      "type": "string"
+    },
+    {
+      "key": "job_version",
+      "value": "0",
+      "type": "string"
+    },
+    {
+      "key": "case_version",
+      "value": "0",
       "type": "string"
     }
   ]

@@ -6,5 +6,6 @@ Implement backlog item <ID> from docs/IMPLEMENTATION_BACKLOG.md.
 3. Implement the smallest complete slice across database, API, workers, and UI where required.
 4. Add meaningful authorization/state/contract tests. Use synthetic data only.
 5. Run relevant checks and update docs when implementation changes a decision.
-6. Report requirement IDs completed, actual test results, limitations, and next dependency.
+6. Apply .codex/personas/commit-steward.md and commit the completed, verified task changes locally, preserving unrelated edits and staged work. Honor an explicit user request to leave changes uncommitted.
+7. Report requirement IDs completed, actual test results, limitations, next dependency, and the commit hash.
 Do not deploy cloud resources unless deployment is within the user's current task.

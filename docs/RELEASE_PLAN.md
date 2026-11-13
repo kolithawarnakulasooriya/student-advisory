@@ -95,13 +95,17 @@ Goal: Deliver a visible student journey with profile capture and uploaded docume
 
 Goal: Enable the core advising experience with grounded answers and human guidance.
 
+Status: Completed for the agreed synthetic-local scope on November 12, 2026: T025–T035, including T027. Durable case/queue portions of T037–T038 are included; notification/email/business-calendar portions remain Inprogress. See [verification and limitations](RELEASE_0_4.md).
+
 ### Backend
 - T025: chunking and embedding versions
 - T026: publication withdrawal and citation support
+- T027: typed rules, bounded department settings and evaluated prompt release controls
 - T028–T030: retrieval and grounded structured responses
 - T031: conversation + generation job model
 - T033: guidance and private notes
 - T034: guidance prioritization in later questions
+- T037–T038 subset: durable human-help cases, receipts/status and current-authority queues; email/notifications/business calendars remain pending
 
 ### Frontend
 - T032: chat UI with citations and evidence drawer

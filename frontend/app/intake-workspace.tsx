@@ -5,6 +5,9 @@ import { ApiError, type Me } from "../lib/api";
 import { staffApi as api } from "../lib/staff-api";
 import ProfileWorkspace from "./profile-workspace";
 import SourceWorkspace from "./source-workspace";
+import CaseWorkspace from "./case-workspace";
+import AdvisingWorkspace from "./advising-workspace";
+import GovernanceWorkspace from "./governance-workspace";
 import SchemaWorkspace from "./schema-workspace";
 
 export type S = components["schemas"];
@@ -40,6 +43,9 @@ export default function IntakeWorkspace({
     );
   const configure = global || me.capabilities.includes("profile.configure");
   const sourceManager = global || me.capabilities.includes("source.manage");
+  const publisher = me.capabilities.includes("source.publish");
+  const rulesManager = me.capabilities.includes("rules.manage");
+  const promptManager = me.capabilities.includes("prompt.manage");
   const sourceReader = sourceManager || me.capabilities.includes("source.read");
   const fail = useCallback(
     async (e: unknown) => {
@@ -82,12 +88,16 @@ export default function IntakeWorkspace({
       active = false;
     };
   }, [scope, staff, global, purpose, fail]);
-  if (
-    !scope ||
-    (!staff && !configure && !sourceReader && !memberships.length)
-  )
+  if (!scope || (!staff && !configure && !sourceReader && !memberships.length))
     return null;
   const own = memberships.some((m) => m.id === mid);
+  const reviewer =
+    !own &&
+    students.some(
+      (s) =>
+        s.id === mid &&
+        me.active_grants.some((g) => g.id === s.advisor_grant_id),
+    );
   const selectedScope = me.scopes.find((s) => s.id === scope);
   return (
     <section
@@ -139,6 +149,30 @@ export default function IntakeWorkspace({
         </label>
       )}
       <nav aria-label="Academic workspace">
+        {staff && (
+          <button
+            aria-pressed={tab === "Cases"}
+            onClick={() => setTab("Cases")}
+          >
+            Human help queue
+          </button>
+        )}
+        {mid && (
+          <button
+            aria-pressed={tab === "Advising"}
+            onClick={() => setTab("Advising")}
+          >
+            Advising and human help
+          </button>
+        )}
+        {(rulesManager || promptManager) && (
+          <button
+            aria-pressed={tab === "Knowledge"}
+            onClick={() => setTab("Knowledge")}
+          >
+            Evidence rules and releases
+          </button>
+        )}
         <button
           aria-pressed={tab === "Profile"}
           onClick={() => setTab("Profile")}
@@ -160,6 +194,39 @@ export default function IntakeWorkspace({
           </button>
         )}
       </nav>
+      {!denied && tab === "Cases" && staff && (
+        <CaseWorkspace
+          scope={scope}
+          staff
+          purpose={global ? purpose : undefined}
+          fail={fail}
+        />
+      )}
+      {!denied && tab === "Advising" && mid && (
+        <AdvisingWorkspace
+          key={`${mid}:${purpose}`}
+          mid={mid}
+          scope={scope}
+          own={own}
+          reviewer={reviewer}
+          staff={staff}
+          purpose={global ? purpose : undefined}
+          fail={fail}
+        />
+      )}
+      {!denied &&
+        tab === "Knowledge" &&
+        selectedScope &&
+        (rulesManager || promptManager) && (
+          <GovernanceWorkspace
+            key={`${scope}:${purpose}`}
+            scope={selectedScope}
+            global={promptManager}
+            department={rulesManager}
+            purpose={global ? purpose : undefined}
+            fail={fail}
+          />
+        )}
       {!denied &&
         tab === "Profile" &&
         (mid ? (
@@ -194,6 +261,7 @@ export default function IntakeWorkspace({
           mid={mid}
           canUpload={staff || sourceManager}
           shared={sourceManager}
+          publisher={publisher}
           global={global}
           purpose={global ? purpose : undefined}
           fail={fail}

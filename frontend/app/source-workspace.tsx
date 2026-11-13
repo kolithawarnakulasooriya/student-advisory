@@ -4,12 +4,14 @@ import { ApiError } from "../lib/api";
 import { extractionText } from "../lib/intake-display";
 import { staffApi as api, revision } from "../lib/staff-api";
 import { pretty, type S, type Purpose } from "./intake-workspace";
+import PublicationCard from "./publication-card";
 const emptyPage = { items: [], total: 0, next_cursor: null };
 export default function SourceWorkspace({
   scope,
   mid,
   canUpload,
   shared,
+  publisher,
   global,
   purpose,
   fail,
@@ -18,6 +20,7 @@ export default function SourceWorkspace({
   mid: string;
   canUpload: boolean;
   shared: boolean;
+  publisher: boolean;
   global: boolean;
   purpose?: Purpose;
   fail: (e: unknown) => Promise<void>;
@@ -160,8 +163,8 @@ export default function SourceWorkspace({
     <div>
       <h3>Documents</h3>
       <p>
-        Extracted documents remain at needs review. They are not published or
-        used for advising answers in this release.
+        Intake and publication are separate. Only reviewed, indexed and
+        explicitly published evidence can support advising answers.
       </p>
       {error && (
         <p role="alert">
@@ -201,7 +204,7 @@ export default function SourceWorkspace({
                       }
                     >
                       {scope.kind === "college" ? "College" : "Department"}{" "}
-                      staff
+                      shared evidence
                     </option>
                   )}
                   {global && (
@@ -276,6 +279,14 @@ export default function SourceWorkspace({
       {page.items.map((s) => (
         <article className="source-card" key={s.id}>
           <h4>{s.metadata.title}</h4>
+          {publisher && (
+            <PublicationCard
+              key={`${s.id}:${s.version}`}
+              source={s}
+              purpose={purpose}
+              fail={handleError}
+            />
+          )}
           <p>
             {s.filename} · revision {s.version} · {pretty(s.state)} · attempt{" "}
             {s.attempt}

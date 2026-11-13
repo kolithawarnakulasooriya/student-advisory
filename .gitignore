@@ -29,5 +29,3 @@ test-results/
 frontend/next-env.d.ts
 
 frontend/.next-e2e-*/
-
-backend/
